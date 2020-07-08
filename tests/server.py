@@ -15,9 +15,14 @@
 import http.server
 import os
 
-PORT = 8907
-EMPTY_PAGE = f'http://localhost:{PORT}/empty.html'
-PREFIX = f'http://localhost:{PORT}'
+class Server:
+  def __init__(self):
+    self.PORT = 8907
+    self.EMPTY_PAGE = f'http://localhost:{self.PORT}/empty.html'
+    self.PREFIX = f'http://localhost:{self.PORT}'
+    self.CROSS_PROCESS_PREFIX = f'http://127.0.0.1:{self.PORT}'
+
+server = Server()
 
 class HTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
   def __init__(self, *args, **kwargs):

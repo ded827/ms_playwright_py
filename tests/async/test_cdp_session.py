@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import asyncio
-
 import pytest
 
 from playwright.async_api import Error
@@ -22,17 +20,21 @@ from playwright.async_api import Error
 @pytest.mark.only_browser("chromium")
 async def test_should_work(page):
     client = await page.context.new_cdp_session(page)
-
-    await asyncio.gather(
-        client.send("Runtime.enable"),
-        client.send("Runtime.evaluate", {"expression": "window.foo = 'bar'"}),
+    events = []
+    client.on("Runtime.consoleAPICalled", lambda params: events.append(params))
+    await client.send("Runtime.enable")
+    result = await client.send(
+        "Runtime.evaluate",
+        {"expression": "window.foo = 'bar'; console.log('log'); 'result'"},
     )
+    assert result == {"result": {"type": "string", "value": "result"}}
     foo = await page.evaluate("() => window.foo")
     assert foo == "bar"
+    assert events[0]["args"][0]["value"] == "log"
 
 
 @pytest.mark.only_browser("chromium")
-async def test_should_send_events(page, server):
+async def test_should_receive_events(page, server):
     client = await page.context.new_cdp_session(page)
     await client.send("Network.enable")
     events = []

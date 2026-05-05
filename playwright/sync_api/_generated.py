@@ -65,6 +65,7 @@ from playwright._impl._fetch import APIRequestContext as APIRequestContextImpl
 from playwright._impl._fetch import APIResponse as APIResponseImpl
 from playwright._impl._file_chooser import FileChooser as FileChooserImpl
 from playwright._impl._frame import Frame as FrameImpl
+from playwright._impl._helper import to_milliseconds
 from playwright._impl._input import Keyboard as KeyboardImpl
 from playwright._impl._input import Mouse as MouseImpl
 from playwright._impl._input import Touchscreen as TouchscreenImpl
@@ -801,7 +802,7 @@ class Route(SyncBase):
         post_data: typing.Optional[typing.Union[typing.Any, str, bytes]] = None,
         max_redirects: typing.Optional[int] = None,
         max_retries: typing.Optional[int] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> "APIResponse":
         """Route.fetch
 
@@ -861,7 +862,7 @@ class Route(SyncBase):
                     postData=mapping.to_impl(post_data),
                     maxRedirects=max_redirects,
                     maxRetries=max_retries,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                 )
             )
         )
@@ -1166,7 +1167,7 @@ class WebSocket(SyncBase):
         event: str,
         predicate: typing.Optional[typing.Callable] = None,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> EventContextManager:
         """WebSocket.expect_event
 
@@ -1190,7 +1191,9 @@ class WebSocket(SyncBase):
         return EventContextManager(
             self,
             self._impl_obj.expect_event(
-                event=event, predicate=self._wrap_handler(predicate), timeout=timeout
+                event=event,
+                predicate=self._wrap_handler(predicate),
+                timeout=to_milliseconds(timeout),
             ).future,
         )
 
@@ -1248,7 +1251,7 @@ class WebSocket(SyncBase):
         event: str,
         predicate: typing.Optional[typing.Callable] = None,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> typing.Any:
         """WebSocket.wait_for_event
 
@@ -1278,7 +1281,7 @@ class WebSocket(SyncBase):
                 self._impl_obj.wait_for_event(
                     event=event,
                     predicate=self._wrap_handler(predicate),
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                 )
             )
         )
@@ -2150,7 +2153,9 @@ class ElementHandle(JSHandle):
         )
 
     def scroll_into_view_if_needed(
-        self, *, timeout: typing.Optional[float] = None
+        self,
+        *,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """ElementHandle.scroll_into_view_if_needed
 
@@ -2171,7 +2176,11 @@ class ElementHandle(JSHandle):
         """
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.scroll_into_view_if_needed(timeout=timeout))
+            self._sync(
+                self._impl_obj.scroll_into_view_if_needed(
+                    timeout=to_milliseconds(timeout)
+                )
+            )
         )
 
     def hover(
@@ -2181,7 +2190,7 @@ class ElementHandle(JSHandle):
             typing.Sequence[Literal["Alt", "Control", "ControlOrMeta", "Meta", "Shift"]]
         ] = None,
         position: typing.Optional[Position] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         no_wait_after: typing.Optional[bool] = None,
         force: typing.Optional[bool] = None,
         trial: typing.Optional[bool] = None,
@@ -2225,7 +2234,7 @@ class ElementHandle(JSHandle):
                 self._impl_obj.hover(
                     modifiers=mapping.to_impl(modifiers),
                     position=position,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     noWaitAfter=no_wait_after,
                     force=force,
                     trial=trial,
@@ -2243,7 +2252,7 @@ class ElementHandle(JSHandle):
         delay: typing.Optional[float] = None,
         button: typing.Optional[Literal["left", "middle", "right"]] = None,
         click_count: typing.Optional[int] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         force: typing.Optional[bool] = None,
         no_wait_after: typing.Optional[bool] = None,
         trial: typing.Optional[bool] = None,
@@ -2303,7 +2312,7 @@ class ElementHandle(JSHandle):
                     delay=delay,
                     button=button,
                     clickCount=click_count,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     force=force,
                     noWaitAfter=no_wait_after,
                     trial=trial,
@@ -2321,7 +2330,7 @@ class ElementHandle(JSHandle):
         position: typing.Optional[Position] = None,
         delay: typing.Optional[float] = None,
         button: typing.Optional[Literal["left", "middle", "right"]] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         force: typing.Optional[bool] = None,
         no_wait_after: typing.Optional[bool] = None,
         trial: typing.Optional[bool] = None,
@@ -2377,7 +2386,7 @@ class ElementHandle(JSHandle):
                     position=position,
                     delay=delay,
                     button=button,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     force=force,
                     noWaitAfter=no_wait_after,
                     trial=trial,
@@ -2395,7 +2404,7 @@ class ElementHandle(JSHandle):
         element: typing.Optional[
             typing.Union["ElementHandle", typing.Sequence["ElementHandle"]]
         ] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         force: typing.Optional[bool] = None,
         no_wait_after: typing.Optional[bool] = None,
     ) -> typing.List[str]:
@@ -2457,7 +2466,7 @@ class ElementHandle(JSHandle):
                     index=mapping.to_impl(index),
                     label=mapping.to_impl(label),
                     element=mapping.to_impl(element),
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     force=force,
                     noWaitAfter=no_wait_after,
                 )
@@ -2471,7 +2480,7 @@ class ElementHandle(JSHandle):
             typing.Sequence[Literal["Alt", "Control", "ControlOrMeta", "Meta", "Shift"]]
         ] = None,
         position: typing.Optional[Position] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         force: typing.Optional[bool] = None,
         no_wait_after: typing.Optional[bool] = None,
         trial: typing.Optional[bool] = None,
@@ -2517,7 +2526,7 @@ class ElementHandle(JSHandle):
                 self._impl_obj.tap(
                     modifiers=mapping.to_impl(modifiers),
                     position=position,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     force=force,
                     noWaitAfter=no_wait_after,
                     trial=trial,
@@ -2529,7 +2538,7 @@ class ElementHandle(JSHandle):
         self,
         value: str,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         no_wait_after: typing.Optional[bool] = None,
         force: typing.Optional[bool] = None,
     ) -> None:
@@ -2562,7 +2571,10 @@ class ElementHandle(JSHandle):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.fill(
-                    value=value, timeout=timeout, noWaitAfter=no_wait_after, force=force
+                    value=value,
+                    timeout=to_milliseconds(timeout),
+                    noWaitAfter=no_wait_after,
+                    force=force,
                 )
             )
         )
@@ -2571,7 +2583,7 @@ class ElementHandle(JSHandle):
         self,
         *,
         force: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """ElementHandle.select_text
 
@@ -2592,10 +2604,18 @@ class ElementHandle(JSHandle):
         """
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.select_text(force=force, timeout=timeout))
+            self._sync(
+                self._impl_obj.select_text(
+                    force=force, timeout=to_milliseconds(timeout)
+                )
+            )
         )
 
-    def input_value(self, *, timeout: typing.Optional[float] = None) -> str:
+    def input_value(
+        self,
+        *,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
+    ) -> str:
         """ElementHandle.input_value
 
         Returns `input.value` for the selected `<input>` or `<textarea>` or `<select>` element.
@@ -2616,7 +2636,7 @@ class ElementHandle(JSHandle):
         """
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.input_value(timeout=timeout))
+            self._sync(self._impl_obj.input_value(timeout=to_milliseconds(timeout)))
         )
 
     def set_input_files(
@@ -2629,7 +2649,7 @@ class ElementHandle(JSHandle):
             typing.Sequence[FilePayload],
         ],
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         no_wait_after: typing.Optional[bool] = None,
     ) -> None:
         """ElementHandle.set_input_files
@@ -2658,7 +2678,7 @@ class ElementHandle(JSHandle):
             self._sync(
                 self._impl_obj.set_input_files(
                     files=mapping.to_impl(files),
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     noWaitAfter=no_wait_after,
                 )
             )
@@ -2677,7 +2697,7 @@ class ElementHandle(JSHandle):
         text: str,
         *,
         delay: typing.Optional[float] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         no_wait_after: typing.Optional[bool] = None,
     ) -> None:
         """ElementHandle.type
@@ -2706,7 +2726,10 @@ class ElementHandle(JSHandle):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.type(
-                    text=text, delay=delay, timeout=timeout, noWaitAfter=no_wait_after
+                    text=text,
+                    delay=delay,
+                    timeout=to_milliseconds(timeout),
+                    noWaitAfter=no_wait_after,
                 )
             )
         )
@@ -2716,7 +2739,7 @@ class ElementHandle(JSHandle):
         key: str,
         *,
         delay: typing.Optional[float] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         no_wait_after: typing.Optional[bool] = None,
     ) -> None:
         """ElementHandle.press
@@ -2762,7 +2785,10 @@ class ElementHandle(JSHandle):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.press(
-                    key=key, delay=delay, timeout=timeout, noWaitAfter=no_wait_after
+                    key=key,
+                    delay=delay,
+                    timeout=to_milliseconds(timeout),
+                    noWaitAfter=no_wait_after,
                 )
             )
         )
@@ -2772,7 +2798,7 @@ class ElementHandle(JSHandle):
         checked: bool,
         *,
         position: typing.Optional[Position] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         force: typing.Optional[bool] = None,
         no_wait_after: typing.Optional[bool] = None,
         trial: typing.Optional[bool] = None,
@@ -2816,7 +2842,7 @@ class ElementHandle(JSHandle):
                 self._impl_obj.set_checked(
                     checked=checked,
                     position=position,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     force=force,
                     noWaitAfter=no_wait_after,
                     trial=trial,
@@ -2828,7 +2854,7 @@ class ElementHandle(JSHandle):
         self,
         *,
         position: typing.Optional[Position] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         force: typing.Optional[bool] = None,
         no_wait_after: typing.Optional[bool] = None,
         trial: typing.Optional[bool] = None,
@@ -2870,7 +2896,7 @@ class ElementHandle(JSHandle):
             self._sync(
                 self._impl_obj.check(
                     position=position,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     force=force,
                     noWaitAfter=no_wait_after,
                     trial=trial,
@@ -2882,7 +2908,7 @@ class ElementHandle(JSHandle):
         self,
         *,
         position: typing.Optional[Position] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         force: typing.Optional[bool] = None,
         no_wait_after: typing.Optional[bool] = None,
         trial: typing.Optional[bool] = None,
@@ -2924,7 +2950,7 @@ class ElementHandle(JSHandle):
             self._sync(
                 self._impl_obj.uncheck(
                     position=position,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     force=force,
                     noWaitAfter=no_wait_after,
                     trial=trial,
@@ -2965,7 +2991,7 @@ class ElementHandle(JSHandle):
     def screenshot(
         self,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         type: typing.Optional[Literal["jpeg", "png"]] = None,
         path: typing.Optional[typing.Union[pathlib.Path, str]] = None,
         quality: typing.Optional[int] = None,
@@ -3041,7 +3067,7 @@ class ElementHandle(JSHandle):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.screenshot(
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     type=type,
                     path=path,
                     quality=quality,
@@ -3196,7 +3222,7 @@ class ElementHandle(JSHandle):
             "disabled", "editable", "enabled", "hidden", "stable", "visible"
         ],
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """ElementHandle.wait_for_element_state
 
@@ -3226,7 +3252,9 @@ class ElementHandle(JSHandle):
 
         return mapping.from_maybe_impl(
             self._sync(
-                self._impl_obj.wait_for_element_state(state=state, timeout=timeout)
+                self._impl_obj.wait_for_element_state(
+                    state=state, timeout=to_milliseconds(timeout)
+                )
             )
         )
 
@@ -3237,7 +3265,7 @@ class ElementHandle(JSHandle):
         state: typing.Optional[
             Literal["attached", "detached", "hidden", "visible"]
         ] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         strict: typing.Optional[bool] = None,
     ) -> typing.Optional["ElementHandle"]:
         """ElementHandle.wait_for_selector
@@ -3288,7 +3316,10 @@ class ElementHandle(JSHandle):
         return mapping.from_impl_nullable(
             self._sync(
                 self._impl_obj.wait_for_selector(
-                    selector=selector, state=state, timeout=timeout, strict=strict
+                    selector=selector,
+                    state=state,
+                    timeout=to_milliseconds(timeout),
+                    strict=strict,
                 )
             )
         )
@@ -3345,7 +3376,7 @@ class FileChooser(SyncBase):
             typing.Sequence[FilePayload],
         ],
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         no_wait_after: typing.Optional[bool] = None,
     ) -> None:
         """FileChooser.set_files
@@ -3368,7 +3399,7 @@ class FileChooser(SyncBase):
             self._sync(
                 self._impl_obj.set_files(
                     files=mapping.to_impl(files),
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     noWaitAfter=no_wait_after,
                 )
             )
@@ -3447,7 +3478,7 @@ class Frame(SyncBase):
         self,
         url: str,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         wait_until: typing.Optional[
             Literal["commit", "domcontentloaded", "load", "networkidle"]
         ] = None,
@@ -3504,7 +3535,10 @@ class Frame(SyncBase):
         return mapping.from_impl_nullable(
             self._sync(
                 self._impl_obj.goto(
-                    url=url, timeout=timeout, waitUntil=wait_until, referer=referer
+                    url=url,
+                    timeout=to_milliseconds(timeout),
+                    waitUntil=wait_until,
+                    referer=referer,
                 )
             )
         )
@@ -3518,7 +3552,7 @@ class Frame(SyncBase):
         wait_until: typing.Optional[
             Literal["commit", "domcontentloaded", "load", "networkidle"]
         ] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> EventContextManager["Response"]:
         """Frame.expect_navigation
 
@@ -3567,7 +3601,9 @@ class Frame(SyncBase):
         return EventContextManager(
             self,
             self._impl_obj.expect_navigation(
-                url=self._wrap_handler(url), waitUntil=wait_until, timeout=timeout
+                url=self._wrap_handler(url),
+                waitUntil=wait_until,
+                timeout=to_milliseconds(timeout),
             ).future,
         )
 
@@ -3578,7 +3614,7 @@ class Frame(SyncBase):
         wait_until: typing.Optional[
             Literal["commit", "domcontentloaded", "load", "networkidle"]
         ] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """Frame.wait_for_url
 
@@ -3615,7 +3651,9 @@ class Frame(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.wait_for_url(
-                    url=self._wrap_handler(url), waitUntil=wait_until, timeout=timeout
+                    url=self._wrap_handler(url),
+                    waitUntil=wait_until,
+                    timeout=to_milliseconds(timeout),
                 )
             )
         )
@@ -3626,7 +3664,7 @@ class Frame(SyncBase):
             Literal["domcontentloaded", "load", "networkidle"]
         ] = None,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """Frame.wait_for_load_state
 
@@ -3663,7 +3701,11 @@ class Frame(SyncBase):
         """
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.wait_for_load_state(state=state, timeout=timeout))
+            self._sync(
+                self._impl_obj.wait_for_load_state(
+                    state=state, timeout=to_milliseconds(timeout)
+                )
+            )
         )
 
     def frame_element(self) -> "ElementHandle":
@@ -3861,7 +3903,7 @@ class Frame(SyncBase):
         selector: str,
         *,
         strict: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         state: typing.Optional[
             Literal["attached", "detached", "hidden", "visible"]
         ] = None,
@@ -3926,7 +3968,10 @@ class Frame(SyncBase):
         return mapping.from_impl_nullable(
             self._sync(
                 self._impl_obj.wait_for_selector(
-                    selector=selector, strict=strict, timeout=timeout, state=state
+                    selector=selector,
+                    strict=strict,
+                    timeout=to_milliseconds(timeout),
+                    state=state,
                 )
             )
         )
@@ -3936,7 +3981,7 @@ class Frame(SyncBase):
         selector: str,
         *,
         strict: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> bool:
         """Frame.is_checked
 
@@ -3962,7 +4007,7 @@ class Frame(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.is_checked(
-                    selector=selector, strict=strict, timeout=timeout
+                    selector=selector, strict=strict, timeout=to_milliseconds(timeout)
                 )
             )
         )
@@ -3972,7 +4017,7 @@ class Frame(SyncBase):
         selector: str,
         *,
         strict: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> bool:
         """Frame.is_disabled
 
@@ -3998,7 +4043,7 @@ class Frame(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.is_disabled(
-                    selector=selector, strict=strict, timeout=timeout
+                    selector=selector, strict=strict, timeout=to_milliseconds(timeout)
                 )
             )
         )
@@ -4008,7 +4053,7 @@ class Frame(SyncBase):
         selector: str,
         *,
         strict: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> bool:
         """Frame.is_editable
 
@@ -4034,7 +4079,7 @@ class Frame(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.is_editable(
-                    selector=selector, strict=strict, timeout=timeout
+                    selector=selector, strict=strict, timeout=to_milliseconds(timeout)
                 )
             )
         )
@@ -4044,7 +4089,7 @@ class Frame(SyncBase):
         selector: str,
         *,
         strict: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> bool:
         """Frame.is_enabled
 
@@ -4070,7 +4115,7 @@ class Frame(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.is_enabled(
-                    selector=selector, strict=strict, timeout=timeout
+                    selector=selector, strict=strict, timeout=to_milliseconds(timeout)
                 )
             )
         )
@@ -4132,7 +4177,7 @@ class Frame(SyncBase):
         event_init: typing.Optional[typing.Dict] = None,
         *,
         strict: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """Frame.dispatch_event
 
@@ -4193,7 +4238,7 @@ class Frame(SyncBase):
                     type=type,
                     eventInit=mapping.to_impl(event_init),
                     strict=strict,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                 )
             )
         )
@@ -4311,7 +4356,7 @@ class Frame(SyncBase):
         self,
         html: str,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         wait_until: typing.Optional[
             Literal["commit", "domcontentloaded", "load", "networkidle"]
         ] = None,
@@ -4343,7 +4388,7 @@ class Frame(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.set_content(
-                    html=html, timeout=timeout, waitUntil=wait_until
+                    html=html, timeout=to_milliseconds(timeout), waitUntil=wait_until
                 )
             )
         )
@@ -4446,7 +4491,7 @@ class Frame(SyncBase):
         delay: typing.Optional[float] = None,
         button: typing.Optional[Literal["left", "middle", "right"]] = None,
         click_count: typing.Optional[int] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         force: typing.Optional[bool] = None,
         no_wait_after: typing.Optional[bool] = None,
         strict: typing.Optional[bool] = None,
@@ -4512,7 +4557,7 @@ class Frame(SyncBase):
                     delay=delay,
                     button=button,
                     clickCount=click_count,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     force=force,
                     noWaitAfter=no_wait_after,
                     strict=strict,
@@ -4531,7 +4576,7 @@ class Frame(SyncBase):
         position: typing.Optional[Position] = None,
         delay: typing.Optional[float] = None,
         button: typing.Optional[Literal["left", "middle", "right"]] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         force: typing.Optional[bool] = None,
         no_wait_after: typing.Optional[bool] = None,
         strict: typing.Optional[bool] = None,
@@ -4594,7 +4639,7 @@ class Frame(SyncBase):
                     position=position,
                     delay=delay,
                     button=button,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     force=force,
                     noWaitAfter=no_wait_after,
                     strict=strict,
@@ -4611,7 +4656,7 @@ class Frame(SyncBase):
             typing.Sequence[Literal["Alt", "Control", "ControlOrMeta", "Meta", "Shift"]]
         ] = None,
         position: typing.Optional[Position] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         force: typing.Optional[bool] = None,
         no_wait_after: typing.Optional[bool] = None,
         strict: typing.Optional[bool] = None,
@@ -4667,7 +4712,7 @@ class Frame(SyncBase):
                     selector=selector,
                     modifiers=mapping.to_impl(modifiers),
                     position=position,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     force=force,
                     noWaitAfter=no_wait_after,
                     strict=strict,
@@ -4681,7 +4726,7 @@ class Frame(SyncBase):
         selector: str,
         value: str,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         no_wait_after: typing.Optional[bool] = None,
         strict: typing.Optional[bool] = None,
         force: typing.Optional[bool] = None,
@@ -4724,7 +4769,7 @@ class Frame(SyncBase):
                 self._impl_obj.fill(
                     selector=selector,
                     value=value,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     noWaitAfter=no_wait_after,
                     strict=strict,
                     force=force,
@@ -5287,7 +5332,7 @@ class Frame(SyncBase):
         selector: str,
         *,
         strict: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """Frame.focus
 
@@ -5309,7 +5354,9 @@ class Frame(SyncBase):
 
         return mapping.from_maybe_impl(
             self._sync(
-                self._impl_obj.focus(selector=selector, strict=strict, timeout=timeout)
+                self._impl_obj.focus(
+                    selector=selector, strict=strict, timeout=to_milliseconds(timeout)
+                )
             )
         )
 
@@ -5318,7 +5365,7 @@ class Frame(SyncBase):
         selector: str,
         *,
         strict: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> typing.Optional[str]:
         """Frame.text_content
 
@@ -5344,7 +5391,7 @@ class Frame(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.text_content(
-                    selector=selector, strict=strict, timeout=timeout
+                    selector=selector, strict=strict, timeout=to_milliseconds(timeout)
                 )
             )
         )
@@ -5354,7 +5401,7 @@ class Frame(SyncBase):
         selector: str,
         *,
         strict: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> str:
         """Frame.inner_text
 
@@ -5380,7 +5427,7 @@ class Frame(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.inner_text(
-                    selector=selector, strict=strict, timeout=timeout
+                    selector=selector, strict=strict, timeout=to_milliseconds(timeout)
                 )
             )
         )
@@ -5390,7 +5437,7 @@ class Frame(SyncBase):
         selector: str,
         *,
         strict: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> str:
         """Frame.inner_html
 
@@ -5416,7 +5463,7 @@ class Frame(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.inner_html(
-                    selector=selector, strict=strict, timeout=timeout
+                    selector=selector, strict=strict, timeout=to_milliseconds(timeout)
                 )
             )
         )
@@ -5427,7 +5474,7 @@ class Frame(SyncBase):
         name: str,
         *,
         strict: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> typing.Optional[str]:
         """Frame.get_attribute
 
@@ -5455,7 +5502,10 @@ class Frame(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.get_attribute(
-                    selector=selector, name=name, strict=strict, timeout=timeout
+                    selector=selector,
+                    name=name,
+                    strict=strict,
+                    timeout=to_milliseconds(timeout),
                 )
             )
         )
@@ -5468,7 +5518,7 @@ class Frame(SyncBase):
             typing.Sequence[Literal["Alt", "Control", "ControlOrMeta", "Meta", "Shift"]]
         ] = None,
         position: typing.Optional[Position] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         no_wait_after: typing.Optional[bool] = None,
         force: typing.Optional[bool] = None,
         strict: typing.Optional[bool] = None,
@@ -5522,7 +5572,7 @@ class Frame(SyncBase):
                     selector=selector,
                     modifiers=mapping.to_impl(modifiers),
                     position=position,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     noWaitAfter=no_wait_after,
                     force=force,
                     strict=strict,
@@ -5541,7 +5591,7 @@ class Frame(SyncBase):
         force: typing.Optional[bool] = None,
         no_wait_after: typing.Optional[bool] = None,
         strict: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         trial: typing.Optional[bool] = None,
         steps: typing.Optional[int] = None,
     ) -> None:
@@ -5590,7 +5640,7 @@ class Frame(SyncBase):
                     force=force,
                     noWaitAfter=no_wait_after,
                     strict=strict,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     trial=trial,
                     steps=steps,
                 )
@@ -5607,7 +5657,7 @@ class Frame(SyncBase):
         element: typing.Optional[
             typing.Union["ElementHandle", typing.Sequence["ElementHandle"]]
         ] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         no_wait_after: typing.Optional[bool] = None,
         strict: typing.Optional[bool] = None,
         force: typing.Optional[bool] = None,
@@ -5676,7 +5726,7 @@ class Frame(SyncBase):
                     index=mapping.to_impl(index),
                     label=mapping.to_impl(label),
                     element=mapping.to_impl(element),
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     noWaitAfter=no_wait_after,
                     strict=strict,
                     force=force,
@@ -5689,7 +5739,7 @@ class Frame(SyncBase):
         selector: str,
         *,
         strict: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> str:
         """Frame.input_value
 
@@ -5719,7 +5769,7 @@ class Frame(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.input_value(
-                    selector=selector, strict=strict, timeout=timeout
+                    selector=selector, strict=strict, timeout=to_milliseconds(timeout)
                 )
             )
         )
@@ -5736,7 +5786,7 @@ class Frame(SyncBase):
         ],
         *,
         strict: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         no_wait_after: typing.Optional[bool] = None,
     ) -> None:
         """Frame.set_input_files
@@ -5772,7 +5822,7 @@ class Frame(SyncBase):
                     selector=selector,
                     files=mapping.to_impl(files),
                     strict=strict,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     noWaitAfter=no_wait_after,
                 )
             )
@@ -5785,7 +5835,7 @@ class Frame(SyncBase):
         *,
         delay: typing.Optional[float] = None,
         strict: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         no_wait_after: typing.Optional[bool] = None,
     ) -> None:
         """Frame.type
@@ -5824,7 +5874,7 @@ class Frame(SyncBase):
                     text=text,
                     delay=delay,
                     strict=strict,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     noWaitAfter=no_wait_after,
                 )
             )
@@ -5837,7 +5887,7 @@ class Frame(SyncBase):
         *,
         delay: typing.Optional[float] = None,
         strict: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         no_wait_after: typing.Optional[bool] = None,
     ) -> None:
         """Frame.press
@@ -5891,7 +5941,7 @@ class Frame(SyncBase):
                     key=key,
                     delay=delay,
                     strict=strict,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     noWaitAfter=no_wait_after,
                 )
             )
@@ -5902,7 +5952,7 @@ class Frame(SyncBase):
         selector: str,
         *,
         position: typing.Optional[Position] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         force: typing.Optional[bool] = None,
         no_wait_after: typing.Optional[bool] = None,
         strict: typing.Optional[bool] = None,
@@ -5952,7 +6002,7 @@ class Frame(SyncBase):
                 self._impl_obj.check(
                     selector=selector,
                     position=position,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     force=force,
                     noWaitAfter=no_wait_after,
                     strict=strict,
@@ -5966,7 +6016,7 @@ class Frame(SyncBase):
         selector: str,
         *,
         position: typing.Optional[Position] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         force: typing.Optional[bool] = None,
         no_wait_after: typing.Optional[bool] = None,
         strict: typing.Optional[bool] = None,
@@ -6016,7 +6066,7 @@ class Frame(SyncBase):
                 self._impl_obj.uncheck(
                     selector=selector,
                     position=position,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     force=force,
                     noWaitAfter=no_wait_after,
                     strict=strict,
@@ -6025,7 +6075,9 @@ class Frame(SyncBase):
             )
         )
 
-    def wait_for_timeout(self, timeout: float) -> None:
+    def wait_for_timeout(
+        self, timeout: typing.Union[float, datetime.timedelta]
+    ) -> None:
         """Frame.wait_for_timeout
 
         Waits for the given `timeout` in milliseconds.
@@ -6040,7 +6092,9 @@ class Frame(SyncBase):
         """
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.wait_for_timeout(timeout=timeout))
+            self._sync(
+                self._impl_obj.wait_for_timeout(timeout=to_milliseconds(timeout))
+            )
         )
 
     def wait_for_function(
@@ -6048,7 +6102,7 @@ class Frame(SyncBase):
         expression: str,
         *,
         arg: typing.Optional[typing.Any] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         polling: typing.Optional[typing.Union[float, Literal["raf"]]] = None,
     ) -> "JSHandle":
         """Frame.wait_for_function
@@ -6107,7 +6161,7 @@ class Frame(SyncBase):
                 self._impl_obj.wait_for_function(
                     expression=expression,
                     arg=mapping.to_impl(arg),
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     polling=polling,
                 )
             )
@@ -6131,7 +6185,7 @@ class Frame(SyncBase):
         checked: bool,
         *,
         position: typing.Optional[Position] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         force: typing.Optional[bool] = None,
         no_wait_after: typing.Optional[bool] = None,
         strict: typing.Optional[bool] = None,
@@ -6184,7 +6238,7 @@ class Frame(SyncBase):
                     selector=selector,
                     checked=checked,
                     position=position,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     force=force,
                     noWaitAfter=no_wait_after,
                     strict=strict,
@@ -6955,7 +7009,7 @@ class Worker(SyncBase):
         event: str,
         predicate: typing.Optional[typing.Callable] = None,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> EventContextManager:
         """Worker.expect_event
 
@@ -6987,7 +7041,9 @@ class Worker(SyncBase):
         return EventContextManager(
             self,
             self._impl_obj.expect_event(
-                event=event, predicate=self._wrap_handler(predicate), timeout=timeout
+                event=event,
+                predicate=self._wrap_handler(predicate),
+                timeout=to_milliseconds(timeout),
             ).future,
         )
 
@@ -8505,7 +8561,9 @@ class Page(SyncContextManager):
             self._impl_obj.frame(name=name, url=self._wrap_handler(url))
         )
 
-    def set_default_navigation_timeout(self, timeout: float) -> None:
+    def set_default_navigation_timeout(
+        self, timeout: typing.Union[float, datetime.timedelta]
+    ) -> None:
         """Page.set_default_navigation_timeout
 
         This setting will change the default maximum navigation time for the following methods and related shortcuts:
@@ -8527,10 +8585,14 @@ class Page(SyncContextManager):
         """
 
         return mapping.from_maybe_impl(
-            self._impl_obj.set_default_navigation_timeout(timeout=timeout)
+            self._impl_obj.set_default_navigation_timeout(
+                timeout=to_milliseconds(timeout)
+            )
         )
 
-    def set_default_timeout(self, timeout: float) -> None:
+    def set_default_timeout(
+        self, timeout: typing.Union[float, datetime.timedelta]
+    ) -> None:
         """Page.set_default_timeout
 
         This setting will change the default maximum time for all the methods accepting `timeout` option.
@@ -8544,7 +8606,7 @@ class Page(SyncContextManager):
         """
 
         return mapping.from_maybe_impl(
-            self._impl_obj.set_default_timeout(timeout=timeout)
+            self._impl_obj.set_default_timeout(timeout=to_milliseconds(timeout))
         )
 
     def query_selector(
@@ -8596,7 +8658,7 @@ class Page(SyncContextManager):
         self,
         selector: str,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         state: typing.Optional[
             Literal["attached", "detached", "hidden", "visible"]
         ] = None,
@@ -8662,7 +8724,10 @@ class Page(SyncContextManager):
         return mapping.from_impl_nullable(
             self._sync(
                 self._impl_obj.wait_for_selector(
-                    selector=selector, timeout=timeout, state=state, strict=strict
+                    selector=selector,
+                    timeout=to_milliseconds(timeout),
+                    state=state,
+                    strict=strict,
                 )
             )
         )
@@ -8672,7 +8737,7 @@ class Page(SyncContextManager):
         selector: str,
         *,
         strict: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> bool:
         """Page.is_checked
 
@@ -8698,7 +8763,7 @@ class Page(SyncContextManager):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.is_checked(
-                    selector=selector, strict=strict, timeout=timeout
+                    selector=selector, strict=strict, timeout=to_milliseconds(timeout)
                 )
             )
         )
@@ -8708,7 +8773,7 @@ class Page(SyncContextManager):
         selector: str,
         *,
         strict: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> bool:
         """Page.is_disabled
 
@@ -8734,7 +8799,7 @@ class Page(SyncContextManager):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.is_disabled(
-                    selector=selector, strict=strict, timeout=timeout
+                    selector=selector, strict=strict, timeout=to_milliseconds(timeout)
                 )
             )
         )
@@ -8744,7 +8809,7 @@ class Page(SyncContextManager):
         selector: str,
         *,
         strict: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> bool:
         """Page.is_editable
 
@@ -8770,7 +8835,7 @@ class Page(SyncContextManager):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.is_editable(
-                    selector=selector, strict=strict, timeout=timeout
+                    selector=selector, strict=strict, timeout=to_milliseconds(timeout)
                 )
             )
         )
@@ -8780,7 +8845,7 @@ class Page(SyncContextManager):
         selector: str,
         *,
         strict: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> bool:
         """Page.is_enabled
 
@@ -8806,7 +8871,7 @@ class Page(SyncContextManager):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.is_enabled(
-                    selector=selector, strict=strict, timeout=timeout
+                    selector=selector, strict=strict, timeout=to_milliseconds(timeout)
                 )
             )
         )
@@ -8816,7 +8881,7 @@ class Page(SyncContextManager):
         selector: str,
         *,
         strict: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> bool:
         """Page.is_hidden
 
@@ -8842,7 +8907,7 @@ class Page(SyncContextManager):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.is_hidden(
-                    selector=selector, strict=strict, timeout=timeout
+                    selector=selector, strict=strict, timeout=to_milliseconds(timeout)
                 )
             )
         )
@@ -8852,7 +8917,7 @@ class Page(SyncContextManager):
         selector: str,
         *,
         strict: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> bool:
         """Page.is_visible
 
@@ -8878,7 +8943,7 @@ class Page(SyncContextManager):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.is_visible(
-                    selector=selector, strict=strict, timeout=timeout
+                    selector=selector, strict=strict, timeout=to_milliseconds(timeout)
                 )
             )
         )
@@ -8889,7 +8954,7 @@ class Page(SyncContextManager):
         type: str,
         event_init: typing.Optional[typing.Dict] = None,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         strict: typing.Optional[bool] = None,
     ) -> None:
         """Page.dispatch_event
@@ -8950,7 +9015,7 @@ class Page(SyncContextManager):
                     selector=selector,
                     type=type,
                     eventInit=mapping.to_impl(event_init),
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     strict=strict,
                 )
             )
@@ -9409,7 +9474,7 @@ class Page(SyncContextManager):
         self,
         html: str,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         wait_until: typing.Optional[
             Literal["commit", "domcontentloaded", "load", "networkidle"]
         ] = None,
@@ -9441,7 +9506,7 @@ class Page(SyncContextManager):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.set_content(
-                    html=html, timeout=timeout, waitUntil=wait_until
+                    html=html, timeout=to_milliseconds(timeout), waitUntil=wait_until
                 )
             )
         )
@@ -9450,7 +9515,7 @@ class Page(SyncContextManager):
         self,
         url: str,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         wait_until: typing.Optional[
             Literal["commit", "domcontentloaded", "load", "networkidle"]
         ] = None,
@@ -9509,7 +9574,10 @@ class Page(SyncContextManager):
         return mapping.from_impl_nullable(
             self._sync(
                 self._impl_obj.goto(
-                    url=url, timeout=timeout, waitUntil=wait_until, referer=referer
+                    url=url,
+                    timeout=to_milliseconds(timeout),
+                    waitUntil=wait_until,
+                    referer=referer,
                 )
             )
         )
@@ -9517,7 +9585,7 @@ class Page(SyncContextManager):
     def reload(
         self,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         wait_until: typing.Optional[
             Literal["commit", "domcontentloaded", "load", "networkidle"]
         ] = None,
@@ -9550,7 +9618,11 @@ class Page(SyncContextManager):
         """
 
         return mapping.from_impl_nullable(
-            self._sync(self._impl_obj.reload(timeout=timeout, waitUntil=wait_until))
+            self._sync(
+                self._impl_obj.reload(
+                    timeout=to_milliseconds(timeout), waitUntil=wait_until
+                )
+            )
         )
 
     def wait_for_load_state(
@@ -9559,7 +9631,7 @@ class Page(SyncContextManager):
             Literal["domcontentloaded", "load", "networkidle"]
         ] = None,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """Page.wait_for_load_state
 
@@ -9605,7 +9677,11 @@ class Page(SyncContextManager):
         """
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.wait_for_load_state(state=state, timeout=timeout))
+            self._sync(
+                self._impl_obj.wait_for_load_state(
+                    state=state, timeout=to_milliseconds(timeout)
+                )
+            )
         )
 
     def wait_for_url(
@@ -9615,7 +9691,7 @@ class Page(SyncContextManager):
         wait_until: typing.Optional[
             Literal["commit", "domcontentloaded", "load", "networkidle"]
         ] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """Page.wait_for_url
 
@@ -9652,7 +9728,9 @@ class Page(SyncContextManager):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.wait_for_url(
-                    url=self._wrap_handler(url), waitUntil=wait_until, timeout=timeout
+                    url=self._wrap_handler(url),
+                    waitUntil=wait_until,
+                    timeout=to_milliseconds(timeout),
                 )
             )
         )
@@ -9842,7 +9920,7 @@ class Page(SyncContextManager):
         event: str,
         predicate: typing.Optional[typing.Callable] = None,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> typing.Any:
         """Page.wait_for_event
 
@@ -9872,7 +9950,7 @@ class Page(SyncContextManager):
                 self._impl_obj.wait_for_event(
                     event=event,
                     predicate=self._wrap_handler(predicate),
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                 )
             )
         )
@@ -9880,7 +9958,7 @@ class Page(SyncContextManager):
     def go_back(
         self,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         wait_until: typing.Optional[
             Literal["commit", "domcontentloaded", "load", "networkidle"]
         ] = None,
@@ -9914,13 +9992,17 @@ class Page(SyncContextManager):
         """
 
         return mapping.from_impl_nullable(
-            self._sync(self._impl_obj.go_back(timeout=timeout, waitUntil=wait_until))
+            self._sync(
+                self._impl_obj.go_back(
+                    timeout=to_milliseconds(timeout), waitUntil=wait_until
+                )
+            )
         )
 
     def go_forward(
         self,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         wait_until: typing.Optional[
             Literal["commit", "domcontentloaded", "load", "networkidle"]
         ] = None,
@@ -9954,7 +10036,11 @@ class Page(SyncContextManager):
         """
 
         return mapping.from_impl_nullable(
-            self._sync(self._impl_obj.go_forward(timeout=timeout, waitUntil=wait_until))
+            self._sync(
+                self._impl_obj.go_forward(
+                    timeout=to_milliseconds(timeout), waitUntil=wait_until
+                )
+            )
         )
 
     def request_gc(self) -> None:
@@ -10388,7 +10474,7 @@ class Page(SyncContextManager):
     def screenshot(
         self,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         type: typing.Optional[Literal["jpeg", "png"]] = None,
         path: typing.Optional[typing.Union[pathlib.Path, str]] = None,
         quality: typing.Optional[int] = None,
@@ -10464,7 +10550,7 @@ class Page(SyncContextManager):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.screenshot(
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     type=type,
                     path=path,
                     quality=quality,
@@ -10496,7 +10582,7 @@ class Page(SyncContextManager):
     def aria_snapshot(
         self,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         depth: typing.Optional[int] = None,
         mode: typing.Optional[Literal["ai", "default"]] = None,
     ) -> str:
@@ -10522,7 +10608,9 @@ class Page(SyncContextManager):
 
         return mapping.from_maybe_impl(
             self._sync(
-                self._impl_obj.aria_snapshot(timeout=timeout, depth=depth, mode=mode)
+                self._impl_obj.aria_snapshot(
+                    timeout=to_milliseconds(timeout), depth=depth, mode=mode
+                )
             )
         )
 
@@ -10580,7 +10668,7 @@ class Page(SyncContextManager):
         delay: typing.Optional[float] = None,
         button: typing.Optional[Literal["left", "middle", "right"]] = None,
         click_count: typing.Optional[int] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         force: typing.Optional[bool] = None,
         no_wait_after: typing.Optional[bool] = None,
         trial: typing.Optional[bool] = None,
@@ -10646,7 +10734,7 @@ class Page(SyncContextManager):
                     delay=delay,
                     button=button,
                     clickCount=click_count,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     force=force,
                     noWaitAfter=no_wait_after,
                     trial=trial,
@@ -10665,7 +10753,7 @@ class Page(SyncContextManager):
         position: typing.Optional[Position] = None,
         delay: typing.Optional[float] = None,
         button: typing.Optional[Literal["left", "middle", "right"]] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         force: typing.Optional[bool] = None,
         no_wait_after: typing.Optional[bool] = None,
         strict: typing.Optional[bool] = None,
@@ -10727,7 +10815,7 @@ class Page(SyncContextManager):
                     position=position,
                     delay=delay,
                     button=button,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     force=force,
                     noWaitAfter=no_wait_after,
                     strict=strict,
@@ -10744,7 +10832,7 @@ class Page(SyncContextManager):
             typing.Sequence[Literal["Alt", "Control", "ControlOrMeta", "Meta", "Shift"]]
         ] = None,
         position: typing.Optional[Position] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         force: typing.Optional[bool] = None,
         no_wait_after: typing.Optional[bool] = None,
         strict: typing.Optional[bool] = None,
@@ -10800,7 +10888,7 @@ class Page(SyncContextManager):
                     selector=selector,
                     modifiers=mapping.to_impl(modifiers),
                     position=position,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     force=force,
                     noWaitAfter=no_wait_after,
                     strict=strict,
@@ -10814,7 +10902,7 @@ class Page(SyncContextManager):
         selector: str,
         value: str,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         no_wait_after: typing.Optional[bool] = None,
         strict: typing.Optional[bool] = None,
         force: typing.Optional[bool] = None,
@@ -10857,7 +10945,7 @@ class Page(SyncContextManager):
                 self._impl_obj.fill(
                     selector=selector,
                     value=value,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     noWaitAfter=no_wait_after,
                     strict=strict,
                     force=force,
@@ -11418,7 +11506,7 @@ class Page(SyncContextManager):
         selector: str,
         *,
         strict: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """Page.focus
 
@@ -11440,7 +11528,9 @@ class Page(SyncContextManager):
 
         return mapping.from_maybe_impl(
             self._sync(
-                self._impl_obj.focus(selector=selector, strict=strict, timeout=timeout)
+                self._impl_obj.focus(
+                    selector=selector, strict=strict, timeout=to_milliseconds(timeout)
+                )
             )
         )
 
@@ -11449,7 +11539,7 @@ class Page(SyncContextManager):
         selector: str,
         *,
         strict: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> typing.Optional[str]:
         """Page.text_content
 
@@ -11475,7 +11565,7 @@ class Page(SyncContextManager):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.text_content(
-                    selector=selector, strict=strict, timeout=timeout
+                    selector=selector, strict=strict, timeout=to_milliseconds(timeout)
                 )
             )
         )
@@ -11485,7 +11575,7 @@ class Page(SyncContextManager):
         selector: str,
         *,
         strict: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> str:
         """Page.inner_text
 
@@ -11511,7 +11601,7 @@ class Page(SyncContextManager):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.inner_text(
-                    selector=selector, strict=strict, timeout=timeout
+                    selector=selector, strict=strict, timeout=to_milliseconds(timeout)
                 )
             )
         )
@@ -11521,7 +11611,7 @@ class Page(SyncContextManager):
         selector: str,
         *,
         strict: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> str:
         """Page.inner_html
 
@@ -11547,7 +11637,7 @@ class Page(SyncContextManager):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.inner_html(
-                    selector=selector, strict=strict, timeout=timeout
+                    selector=selector, strict=strict, timeout=to_milliseconds(timeout)
                 )
             )
         )
@@ -11558,7 +11648,7 @@ class Page(SyncContextManager):
         name: str,
         *,
         strict: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> typing.Optional[str]:
         """Page.get_attribute
 
@@ -11586,7 +11676,10 @@ class Page(SyncContextManager):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.get_attribute(
-                    selector=selector, name=name, strict=strict, timeout=timeout
+                    selector=selector,
+                    name=name,
+                    strict=strict,
+                    timeout=to_milliseconds(timeout),
                 )
             )
         )
@@ -11599,7 +11692,7 @@ class Page(SyncContextManager):
             typing.Sequence[Literal["Alt", "Control", "ControlOrMeta", "Meta", "Shift"]]
         ] = None,
         position: typing.Optional[Position] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         no_wait_after: typing.Optional[bool] = None,
         force: typing.Optional[bool] = None,
         strict: typing.Optional[bool] = None,
@@ -11653,7 +11746,7 @@ class Page(SyncContextManager):
                     selector=selector,
                     modifiers=mapping.to_impl(modifiers),
                     position=position,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     noWaitAfter=no_wait_after,
                     force=force,
                     strict=strict,
@@ -11671,7 +11764,7 @@ class Page(SyncContextManager):
         target_position: typing.Optional[Position] = None,
         force: typing.Optional[bool] = None,
         no_wait_after: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         strict: typing.Optional[bool] = None,
         trial: typing.Optional[bool] = None,
         steps: typing.Optional[int] = None,
@@ -11736,7 +11829,7 @@ class Page(SyncContextManager):
                     targetPosition=target_position,
                     force=force,
                     noWaitAfter=no_wait_after,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     strict=strict,
                     trial=trial,
                     steps=steps,
@@ -11754,7 +11847,7 @@ class Page(SyncContextManager):
         element: typing.Optional[
             typing.Union["ElementHandle", typing.Sequence["ElementHandle"]]
         ] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         no_wait_after: typing.Optional[bool] = None,
         force: typing.Optional[bool] = None,
         strict: typing.Optional[bool] = None,
@@ -11824,7 +11917,7 @@ class Page(SyncContextManager):
                     index=mapping.to_impl(index),
                     label=mapping.to_impl(label),
                     element=mapping.to_impl(element),
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     noWaitAfter=no_wait_after,
                     force=force,
                     strict=strict,
@@ -11837,7 +11930,7 @@ class Page(SyncContextManager):
         selector: str,
         *,
         strict: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> str:
         """Page.input_value
 
@@ -11867,7 +11960,7 @@ class Page(SyncContextManager):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.input_value(
-                    selector=selector, strict=strict, timeout=timeout
+                    selector=selector, strict=strict, timeout=to_milliseconds(timeout)
                 )
             )
         )
@@ -11883,7 +11976,7 @@ class Page(SyncContextManager):
             typing.Sequence[FilePayload],
         ],
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         strict: typing.Optional[bool] = None,
         no_wait_after: typing.Optional[bool] = None,
     ) -> None:
@@ -11920,7 +12013,7 @@ class Page(SyncContextManager):
                 self._impl_obj.set_input_files(
                     selector=selector,
                     files=mapping.to_impl(files),
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     strict=strict,
                     noWaitAfter=no_wait_after,
                 )
@@ -11933,7 +12026,7 @@ class Page(SyncContextManager):
         text: str,
         *,
         delay: typing.Optional[float] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         no_wait_after: typing.Optional[bool] = None,
         strict: typing.Optional[bool] = None,
     ) -> None:
@@ -11972,7 +12065,7 @@ class Page(SyncContextManager):
                     selector=selector,
                     text=text,
                     delay=delay,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     noWaitAfter=no_wait_after,
                     strict=strict,
                 )
@@ -11985,7 +12078,7 @@ class Page(SyncContextManager):
         key: str,
         *,
         delay: typing.Optional[float] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         no_wait_after: typing.Optional[bool] = None,
         strict: typing.Optional[bool] = None,
     ) -> None:
@@ -12055,7 +12148,7 @@ class Page(SyncContextManager):
                     selector=selector,
                     key=key,
                     delay=delay,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     noWaitAfter=no_wait_after,
                     strict=strict,
                 )
@@ -12067,7 +12160,7 @@ class Page(SyncContextManager):
         selector: str,
         *,
         position: typing.Optional[Position] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         force: typing.Optional[bool] = None,
         no_wait_after: typing.Optional[bool] = None,
         strict: typing.Optional[bool] = None,
@@ -12117,7 +12210,7 @@ class Page(SyncContextManager):
                 self._impl_obj.check(
                     selector=selector,
                     position=position,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     force=force,
                     noWaitAfter=no_wait_after,
                     strict=strict,
@@ -12131,7 +12224,7 @@ class Page(SyncContextManager):
         selector: str,
         *,
         position: typing.Optional[Position] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         force: typing.Optional[bool] = None,
         no_wait_after: typing.Optional[bool] = None,
         strict: typing.Optional[bool] = None,
@@ -12181,7 +12274,7 @@ class Page(SyncContextManager):
                 self._impl_obj.uncheck(
                     selector=selector,
                     position=position,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     force=force,
                     noWaitAfter=no_wait_after,
                     strict=strict,
@@ -12190,7 +12283,9 @@ class Page(SyncContextManager):
             )
         )
 
-    def wait_for_timeout(self, timeout: float) -> None:
+    def wait_for_timeout(
+        self, timeout: typing.Union[float, datetime.timedelta]
+    ) -> None:
         """Page.wait_for_timeout
 
         Waits for the given `timeout` in milliseconds.
@@ -12212,7 +12307,9 @@ class Page(SyncContextManager):
         """
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.wait_for_timeout(timeout=timeout))
+            self._sync(
+                self._impl_obj.wait_for_timeout(timeout=to_milliseconds(timeout))
+            )
         )
 
     def wait_for_function(
@@ -12220,7 +12317,7 @@ class Page(SyncContextManager):
         expression: str,
         *,
         arg: typing.Optional[typing.Any] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         polling: typing.Optional[typing.Union[float, Literal["raf"]]] = None,
     ) -> "JSHandle":
         """Page.wait_for_function
@@ -12279,7 +12376,7 @@ class Page(SyncContextManager):
                 self._impl_obj.wait_for_function(
                     expression=expression,
                     arg=mapping.to_impl(arg),
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     polling=polling,
                 )
             )
@@ -12620,7 +12717,7 @@ class Page(SyncContextManager):
         event: str,
         predicate: typing.Optional[typing.Callable] = None,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> EventContextManager:
         """Page.expect_event
 
@@ -12652,7 +12749,9 @@ class Page(SyncContextManager):
         return EventContextManager(
             self,
             self._impl_obj.expect_event(
-                event=event, predicate=self._wrap_handler(predicate), timeout=timeout
+                event=event,
+                predicate=self._wrap_handler(predicate),
+                timeout=to_milliseconds(timeout),
             ).future,
         )
 
@@ -12660,7 +12759,7 @@ class Page(SyncContextManager):
         self,
         predicate: typing.Optional[typing.Callable[["ConsoleMessage"], bool]] = None,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> EventContextManager["ConsoleMessage"]:
         """Page.expect_console_message
 
@@ -12683,7 +12782,8 @@ class Page(SyncContextManager):
         return EventContextManager(
             self,
             self._impl_obj.expect_console_message(
-                predicate=self._wrap_handler(predicate), timeout=timeout
+                predicate=self._wrap_handler(predicate),
+                timeout=to_milliseconds(timeout),
             ).future,
         )
 
@@ -12691,7 +12791,7 @@ class Page(SyncContextManager):
         self,
         predicate: typing.Optional[typing.Callable[["Download"], bool]] = None,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> EventContextManager["Download"]:
         """Page.expect_download
 
@@ -12714,7 +12814,8 @@ class Page(SyncContextManager):
         return EventContextManager(
             self,
             self._impl_obj.expect_download(
-                predicate=self._wrap_handler(predicate), timeout=timeout
+                predicate=self._wrap_handler(predicate),
+                timeout=to_milliseconds(timeout),
             ).future,
         )
 
@@ -12722,7 +12823,7 @@ class Page(SyncContextManager):
         self,
         predicate: typing.Optional[typing.Callable[["FileChooser"], bool]] = None,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> EventContextManager["FileChooser"]:
         """Page.expect_file_chooser
 
@@ -12745,7 +12846,8 @@ class Page(SyncContextManager):
         return EventContextManager(
             self,
             self._impl_obj.expect_file_chooser(
-                predicate=self._wrap_handler(predicate), timeout=timeout
+                predicate=self._wrap_handler(predicate),
+                timeout=to_milliseconds(timeout),
             ).future,
         )
 
@@ -12758,7 +12860,7 @@ class Page(SyncContextManager):
         wait_until: typing.Optional[
             Literal["commit", "domcontentloaded", "load", "networkidle"]
         ] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> EventContextManager["Response"]:
         """Page.expect_navigation
 
@@ -12809,7 +12911,9 @@ class Page(SyncContextManager):
         return EventContextManager(
             self,
             self._impl_obj.expect_navigation(
-                url=self._wrap_handler(url), waitUntil=wait_until, timeout=timeout
+                url=self._wrap_handler(url),
+                waitUntil=wait_until,
+                timeout=to_milliseconds(timeout),
             ).future,
         )
 
@@ -12817,7 +12921,7 @@ class Page(SyncContextManager):
         self,
         predicate: typing.Optional[typing.Callable[["Page"], bool]] = None,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> EventContextManager["Page"]:
         """Page.expect_popup
 
@@ -12840,7 +12944,8 @@ class Page(SyncContextManager):
         return EventContextManager(
             self,
             self._impl_obj.expect_popup(
-                predicate=self._wrap_handler(predicate), timeout=timeout
+                predicate=self._wrap_handler(predicate),
+                timeout=to_milliseconds(timeout),
             ).future,
         )
 
@@ -12850,7 +12955,7 @@ class Page(SyncContextManager):
             str, typing.Pattern[str], typing.Callable[["Request"], bool]
         ],
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> EventContextManager["Request"]:
         """Page.expect_request
 
@@ -12887,7 +12992,8 @@ class Page(SyncContextManager):
         return EventContextManager(
             self,
             self._impl_obj.expect_request(
-                urlOrPredicate=self._wrap_handler(url_or_predicate), timeout=timeout
+                urlOrPredicate=self._wrap_handler(url_or_predicate),
+                timeout=to_milliseconds(timeout),
             ).future,
         )
 
@@ -12895,7 +13001,7 @@ class Page(SyncContextManager):
         self,
         predicate: typing.Optional[typing.Callable[["Request"], bool]] = None,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> EventContextManager["Request"]:
         """Page.expect_request_finished
 
@@ -12918,7 +13024,8 @@ class Page(SyncContextManager):
         return EventContextManager(
             self,
             self._impl_obj.expect_request_finished(
-                predicate=self._wrap_handler(predicate), timeout=timeout
+                predicate=self._wrap_handler(predicate),
+                timeout=to_milliseconds(timeout),
             ).future,
         )
 
@@ -12928,7 +13035,7 @@ class Page(SyncContextManager):
             str, typing.Pattern[str], typing.Callable[["Response"], bool]
         ],
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> EventContextManager["Response"]:
         """Page.expect_response
 
@@ -12967,7 +13074,8 @@ class Page(SyncContextManager):
         return EventContextManager(
             self,
             self._impl_obj.expect_response(
-                urlOrPredicate=self._wrap_handler(url_or_predicate), timeout=timeout
+                urlOrPredicate=self._wrap_handler(url_or_predicate),
+                timeout=to_milliseconds(timeout),
             ).future,
         )
 
@@ -12975,7 +13083,7 @@ class Page(SyncContextManager):
         self,
         predicate: typing.Optional[typing.Callable[["WebSocket"], bool]] = None,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> EventContextManager["WebSocket"]:
         """Page.expect_websocket
 
@@ -12998,7 +13106,8 @@ class Page(SyncContextManager):
         return EventContextManager(
             self,
             self._impl_obj.expect_websocket(
-                predicate=self._wrap_handler(predicate), timeout=timeout
+                predicate=self._wrap_handler(predicate),
+                timeout=to_milliseconds(timeout),
             ).future,
         )
 
@@ -13006,7 +13115,7 @@ class Page(SyncContextManager):
         self,
         predicate: typing.Optional[typing.Callable[["Worker"], bool]] = None,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> EventContextManager["Worker"]:
         """Page.expect_worker
 
@@ -13029,7 +13138,8 @@ class Page(SyncContextManager):
         return EventContextManager(
             self,
             self._impl_obj.expect_worker(
-                predicate=self._wrap_handler(predicate), timeout=timeout
+                predicate=self._wrap_handler(predicate),
+                timeout=to_milliseconds(timeout),
             ).future,
         )
 
@@ -13039,7 +13149,7 @@ class Page(SyncContextManager):
         checked: bool,
         *,
         position: typing.Optional[Position] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         force: typing.Optional[bool] = None,
         no_wait_after: typing.Optional[bool] = None,
         strict: typing.Optional[bool] = None,
@@ -13092,7 +13202,7 @@ class Page(SyncContextManager):
                     selector=selector,
                     checked=checked,
                     position=position,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     force=force,
                     noWaitAfter=no_wait_after,
                     strict=strict,
@@ -13766,7 +13876,9 @@ class BrowserContext(SyncContextManager):
         """
         return mapping.from_impl(self._impl_obj.clock)
 
-    def set_default_navigation_timeout(self, timeout: float) -> None:
+    def set_default_navigation_timeout(
+        self, timeout: typing.Union[float, datetime.timedelta]
+    ) -> None:
         """BrowserContext.set_default_navigation_timeout
 
         This setting will change the default maximum navigation time for the following methods and related shortcuts:
@@ -13787,10 +13899,14 @@ class BrowserContext(SyncContextManager):
         """
 
         return mapping.from_maybe_impl(
-            self._impl_obj.set_default_navigation_timeout(timeout=timeout)
+            self._impl_obj.set_default_navigation_timeout(
+                timeout=to_milliseconds(timeout)
+            )
         )
 
-    def set_default_timeout(self, timeout: float) -> None:
+    def set_default_timeout(
+        self, timeout: typing.Union[float, datetime.timedelta]
+    ) -> None:
         """BrowserContext.set_default_timeout
 
         This setting will change the default maximum time for all the methods accepting `timeout` option.
@@ -13806,7 +13922,7 @@ class BrowserContext(SyncContextManager):
         """
 
         return mapping.from_maybe_impl(
-            self._impl_obj.set_default_timeout(timeout=timeout)
+            self._impl_obj.set_default_timeout(timeout=to_milliseconds(timeout))
         )
 
     def new_page(self) -> "Page":
@@ -14565,7 +14681,7 @@ class BrowserContext(SyncContextManager):
         event: str,
         predicate: typing.Optional[typing.Callable] = None,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> EventContextManager:
         """BrowserContext.expect_event
 
@@ -14597,7 +14713,9 @@ class BrowserContext(SyncContextManager):
         return EventContextManager(
             self,
             self._impl_obj.expect_event(
-                event=event, predicate=self._wrap_handler(predicate), timeout=timeout
+                event=event,
+                predicate=self._wrap_handler(predicate),
+                timeout=to_milliseconds(timeout),
             ).future,
         )
 
@@ -14798,7 +14916,7 @@ class BrowserContext(SyncContextManager):
         event: str,
         predicate: typing.Optional[typing.Callable] = None,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> typing.Any:
         """BrowserContext.wait_for_event
 
@@ -14828,7 +14946,7 @@ class BrowserContext(SyncContextManager):
                 self._impl_obj.wait_for_event(
                     event=event,
                     predicate=self._wrap_handler(predicate),
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                 )
             )
         )
@@ -14837,7 +14955,7 @@ class BrowserContext(SyncContextManager):
         self,
         predicate: typing.Optional[typing.Callable[["ConsoleMessage"], bool]] = None,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> EventContextManager["ConsoleMessage"]:
         """BrowserContext.expect_console_message
 
@@ -14861,7 +14979,8 @@ class BrowserContext(SyncContextManager):
         return EventContextManager(
             self,
             self._impl_obj.expect_console_message(
-                predicate=self._wrap_handler(predicate), timeout=timeout
+                predicate=self._wrap_handler(predicate),
+                timeout=to_milliseconds(timeout),
             ).future,
         )
 
@@ -14869,7 +14988,7 @@ class BrowserContext(SyncContextManager):
         self,
         predicate: typing.Optional[typing.Callable[["Page"], bool]] = None,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> EventContextManager["Page"]:
         """BrowserContext.expect_page
 
@@ -14892,7 +15011,8 @@ class BrowserContext(SyncContextManager):
         return EventContextManager(
             self,
             self._impl_obj.expect_page(
-                predicate=self._wrap_handler(predicate), timeout=timeout
+                predicate=self._wrap_handler(predicate),
+                timeout=to_milliseconds(timeout),
             ).future,
         )
 
@@ -15757,7 +15877,7 @@ class BrowserType(SyncBase):
         handle_sigint: typing.Optional[bool] = None,
         handle_sigterm: typing.Optional[bool] = None,
         handle_sighup: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         env: typing.Optional[typing.Dict[str, typing.Union[str, float, bool]]] = None,
         headless: typing.Optional[bool] = None,
         proxy: typing.Optional[ProxySettings] = None,
@@ -15874,7 +15994,7 @@ class BrowserType(SyncBase):
                     handleSIGINT=handle_sigint,
                     handleSIGTERM=handle_sigterm,
                     handleSIGHUP=handle_sighup,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     env=mapping.to_impl(env),
                     headless=headless,
                     proxy=proxy,
@@ -15901,7 +16021,7 @@ class BrowserType(SyncBase):
         handle_sigint: typing.Optional[bool] = None,
         handle_sigterm: typing.Optional[bool] = None,
         handle_sighup: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         env: typing.Optional[typing.Dict[str, typing.Union[str, float, bool]]] = None,
         headless: typing.Optional[bool] = None,
         proxy: typing.Optional[ProxySettings] = None,
@@ -16176,7 +16296,7 @@ class BrowserType(SyncBase):
                     handleSIGINT=handle_sigint,
                     handleSIGTERM=handle_sigterm,
                     handleSIGHUP=handle_sighup,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     env=mapping.to_impl(env),
                     headless=headless,
                     proxy=proxy,
@@ -16227,7 +16347,7 @@ class BrowserType(SyncBase):
         self,
         endpoint_url: str,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         slow_mo: typing.Optional[float] = None,
         headers: typing.Optional[typing.Dict[str, str]] = None,
         is_local: typing.Optional[bool] = None,
@@ -16278,7 +16398,7 @@ class BrowserType(SyncBase):
             self._sync(
                 self._impl_obj.connect_over_cdp(
                     endpointURL=endpoint_url,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     slowMo=slow_mo,
                     headers=mapping.to_impl(headers),
                     isLocal=is_local,
@@ -16290,7 +16410,7 @@ class BrowserType(SyncBase):
         self,
         endpoint: str,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         slow_mo: typing.Optional[float] = None,
         headers: typing.Optional[typing.Dict[str, str]] = None,
         expose_network: typing.Optional[str] = None,
@@ -16337,7 +16457,7 @@ class BrowserType(SyncBase):
             self._sync(
                 self._impl_obj.connect(
                     endpoint=endpoint,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     slowMo=slow_mo,
                     headers=mapping.to_impl(headers),
                     exposeNetwork=expose_network,
@@ -16756,7 +16876,9 @@ class Locator(SyncBase):
         return mapping.from_maybe_impl(self._impl_obj.description)
 
     def bounding_box(
-        self, *, timeout: typing.Optional[float] = None
+        self,
+        *,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> typing.Optional[FloatRect]:
         """Locator.bounding_box
 
@@ -16795,14 +16917,14 @@ class Locator(SyncBase):
         """
 
         return mapping.from_impl_nullable(
-            self._sync(self._impl_obj.bounding_box(timeout=timeout))
+            self._sync(self._impl_obj.bounding_box(timeout=to_milliseconds(timeout)))
         )
 
     def check(
         self,
         *,
         position: typing.Optional[Position] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         force: typing.Optional[bool] = None,
         no_wait_after: typing.Optional[bool] = None,
         trial: typing.Optional[bool] = None,
@@ -16854,7 +16976,7 @@ class Locator(SyncBase):
             self._sync(
                 self._impl_obj.check(
                     position=position,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     force=force,
                     noWaitAfter=no_wait_after,
                     trial=trial,
@@ -16872,7 +16994,7 @@ class Locator(SyncBase):
         delay: typing.Optional[float] = None,
         button: typing.Optional[Literal["left", "middle", "right"]] = None,
         click_count: typing.Optional[int] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         force: typing.Optional[bool] = None,
         no_wait_after: typing.Optional[bool] = None,
         trial: typing.Optional[bool] = None,
@@ -16954,7 +17076,7 @@ class Locator(SyncBase):
                     delay=delay,
                     button=button,
                     clickCount=click_count,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     force=force,
                     noWaitAfter=no_wait_after,
                     trial=trial,
@@ -16972,7 +17094,7 @@ class Locator(SyncBase):
         position: typing.Optional[Position] = None,
         delay: typing.Optional[float] = None,
         button: typing.Optional[Literal["left", "middle", "right"]] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         force: typing.Optional[bool] = None,
         no_wait_after: typing.Optional[bool] = None,
         trial: typing.Optional[bool] = None,
@@ -17034,7 +17156,7 @@ class Locator(SyncBase):
                     position=position,
                     delay=delay,
                     button=button,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     force=force,
                     noWaitAfter=no_wait_after,
                     trial=trial,
@@ -17048,7 +17170,7 @@ class Locator(SyncBase):
         type: str,
         event_init: typing.Optional[typing.Dict] = None,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """Locator.dispatch_event
 
@@ -17102,7 +17224,9 @@ class Locator(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.dispatch_event(
-                    type=type, eventInit=mapping.to_impl(event_init), timeout=timeout
+                    type=type,
+                    eventInit=mapping.to_impl(event_init),
+                    timeout=to_milliseconds(timeout),
                 )
             )
         )
@@ -17112,7 +17236,7 @@ class Locator(SyncBase):
         expression: str,
         arg: typing.Optional[typing.Any] = None,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> typing.Any:
         """Locator.evaluate
 
@@ -17155,7 +17279,9 @@ class Locator(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.evaluate(
-                    expression=expression, arg=mapping.to_impl(arg), timeout=timeout
+                    expression=expression,
+                    arg=mapping.to_impl(arg),
+                    timeout=to_milliseconds(timeout),
                 )
             )
         )
@@ -17209,7 +17335,7 @@ class Locator(SyncBase):
         expression: str,
         arg: typing.Optional[typing.Any] = None,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> "JSHandle":
         """Locator.evaluate_handle
 
@@ -17249,7 +17375,9 @@ class Locator(SyncBase):
         return mapping.from_impl(
             self._sync(
                 self._impl_obj.evaluate_handle(
-                    expression=expression, arg=mapping.to_impl(arg), timeout=timeout
+                    expression=expression,
+                    arg=mapping.to_impl(arg),
+                    timeout=to_milliseconds(timeout),
                 )
             )
         )
@@ -17258,7 +17386,7 @@ class Locator(SyncBase):
         self,
         value: str,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         no_wait_after: typing.Optional[bool] = None,
         force: typing.Optional[bool] = None,
     ) -> None:
@@ -17301,7 +17429,10 @@ class Locator(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.fill(
-                    value=value, timeout=timeout, noWaitAfter=no_wait_after, force=force
+                    value=value,
+                    timeout=to_milliseconds(timeout),
+                    noWaitAfter=no_wait_after,
+                    force=force,
                 )
             )
         )
@@ -17309,7 +17440,7 @@ class Locator(SyncBase):
     def clear(
         self,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         no_wait_after: typing.Optional[bool] = None,
         force: typing.Optional[bool] = None,
     ) -> None:
@@ -17348,7 +17479,9 @@ class Locator(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.clear(
-                    timeout=timeout, noWaitAfter=no_wait_after, force=force
+                    timeout=to_milliseconds(timeout),
+                    noWaitAfter=no_wait_after,
+                    force=force,
                 )
             )
         )
@@ -17898,7 +18031,9 @@ class Locator(SyncBase):
         return mapping.from_impl(self._impl_obj.frame_locator(selector=selector))
 
     def element_handle(
-        self, *, timeout: typing.Optional[float] = None
+        self,
+        *,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> "ElementHandle":
         """Locator.element_handle
 
@@ -17917,7 +18052,7 @@ class Locator(SyncBase):
         """
 
         return mapping.from_impl(
-            self._sync(self._impl_obj.element_handle(timeout=timeout))
+            self._sync(self._impl_obj.element_handle(timeout=to_milliseconds(timeout)))
         )
 
     def element_handles(self) -> typing.List["ElementHandle"]:
@@ -18108,7 +18243,11 @@ class Locator(SyncBase):
 
         return mapping.from_impl(self._impl_obj.and_(locator=locator._impl_obj))
 
-    def focus(self, *, timeout: typing.Optional[float] = None) -> None:
+    def focus(
+        self,
+        *,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
+    ) -> None:
         """Locator.focus
 
         Calls [focus](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/focus) on the matching element.
@@ -18121,10 +18260,14 @@ class Locator(SyncBase):
         """
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.focus(timeout=timeout))
+            self._sync(self._impl_obj.focus(timeout=to_milliseconds(timeout)))
         )
 
-    def blur(self, *, timeout: typing.Optional[float] = None) -> None:
+    def blur(
+        self,
+        *,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
+    ) -> None:
         """Locator.blur
 
         Calls [blur](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/blur) on the element.
@@ -18136,7 +18279,9 @@ class Locator(SyncBase):
             be changed by using the `browser_context.set_default_timeout()` or `page.set_default_timeout()` methods.
         """
 
-        return mapping.from_maybe_impl(self._sync(self._impl_obj.blur(timeout=timeout)))
+        return mapping.from_maybe_impl(
+            self._sync(self._impl_obj.blur(timeout=to_milliseconds(timeout)))
+        )
 
     def all(self) -> typing.List["Locator"]:
         """Locator.all
@@ -18194,7 +18339,7 @@ class Locator(SyncBase):
         *,
         force: typing.Optional[bool] = None,
         no_wait_after: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         trial: typing.Optional[bool] = None,
         source_position: typing.Optional[Position] = None,
         target_position: typing.Optional[Position] = None,
@@ -18256,7 +18401,7 @@ class Locator(SyncBase):
                     target=target._impl_obj,
                     force=force,
                     noWaitAfter=no_wait_after,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     trial=trial,
                     sourcePosition=source_position,
                     targetPosition=target_position,
@@ -18266,7 +18411,10 @@ class Locator(SyncBase):
         )
 
     def get_attribute(
-        self, name: str, *, timeout: typing.Optional[float] = None
+        self,
+        name: str,
+        *,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> typing.Optional[str]:
         """Locator.get_attribute
 
@@ -18289,7 +18437,11 @@ class Locator(SyncBase):
         """
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.get_attribute(name=name, timeout=timeout))
+            self._sync(
+                self._impl_obj.get_attribute(
+                    name=name, timeout=to_milliseconds(timeout)
+                )
+            )
         )
 
     def hover(
@@ -18299,7 +18451,7 @@ class Locator(SyncBase):
             typing.Sequence[Literal["Alt", "Control", "ControlOrMeta", "Meta", "Shift"]]
         ] = None,
         position: typing.Optional[Position] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         no_wait_after: typing.Optional[bool] = None,
         force: typing.Optional[bool] = None,
         trial: typing.Optional[bool] = None,
@@ -18355,7 +18507,7 @@ class Locator(SyncBase):
                 self._impl_obj.hover(
                     modifiers=mapping.to_impl(modifiers),
                     position=position,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     noWaitAfter=no_wait_after,
                     force=force,
                     trial=trial,
@@ -18363,7 +18515,11 @@ class Locator(SyncBase):
             )
         )
 
-    def inner_html(self, *, timeout: typing.Optional[float] = None) -> str:
+    def inner_html(
+        self,
+        *,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
+    ) -> str:
         """Locator.inner_html
 
         Returns the [`element.innerHTML`](https://developer.mozilla.org/en-US/docs/Web/API/Element/innerHTML).
@@ -18380,10 +18536,14 @@ class Locator(SyncBase):
         """
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.inner_html(timeout=timeout))
+            self._sync(self._impl_obj.inner_html(timeout=to_milliseconds(timeout)))
         )
 
-    def inner_text(self, *, timeout: typing.Optional[float] = None) -> str:
+    def inner_text(
+        self,
+        *,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
+    ) -> str:
         """Locator.inner_text
 
         Returns the [`element.innerText`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/innerText).
@@ -18403,10 +18563,14 @@ class Locator(SyncBase):
         """
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.inner_text(timeout=timeout))
+            self._sync(self._impl_obj.inner_text(timeout=to_milliseconds(timeout)))
         )
 
-    def input_value(self, *, timeout: typing.Optional[float] = None) -> str:
+    def input_value(
+        self,
+        *,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
+    ) -> str:
         """Locator.input_value
 
         Returns the value for the matching `<input>` or `<textarea>` or `<select>` element.
@@ -18439,10 +18603,14 @@ class Locator(SyncBase):
         """
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.input_value(timeout=timeout))
+            self._sync(self._impl_obj.input_value(timeout=to_milliseconds(timeout)))
         )
 
-    def is_checked(self, *, timeout: typing.Optional[float] = None) -> bool:
+    def is_checked(
+        self,
+        *,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
+    ) -> bool:
         """Locator.is_checked
 
         Returns whether the element is checked. Throws if the element is not a checkbox or radio input.
@@ -18468,10 +18636,14 @@ class Locator(SyncBase):
         """
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.is_checked(timeout=timeout))
+            self._sync(self._impl_obj.is_checked(timeout=to_milliseconds(timeout)))
         )
 
-    def is_disabled(self, *, timeout: typing.Optional[float] = None) -> bool:
+    def is_disabled(
+        self,
+        *,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
+    ) -> bool:
         """Locator.is_disabled
 
         Returns whether the element is disabled, the opposite of [enabled](https://playwright.dev/python/docs/actionability#enabled).
@@ -18497,10 +18669,14 @@ class Locator(SyncBase):
         """
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.is_disabled(timeout=timeout))
+            self._sync(self._impl_obj.is_disabled(timeout=to_milliseconds(timeout)))
         )
 
-    def is_editable(self, *, timeout: typing.Optional[float] = None) -> bool:
+    def is_editable(
+        self,
+        *,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
+    ) -> bool:
         """Locator.is_editable
 
         Returns whether the element is [editable](https://playwright.dev/python/docs/actionability#editable). If the target element is not an `<input>`,
@@ -18528,10 +18704,14 @@ class Locator(SyncBase):
         """
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.is_editable(timeout=timeout))
+            self._sync(self._impl_obj.is_editable(timeout=to_milliseconds(timeout)))
         )
 
-    def is_enabled(self, *, timeout: typing.Optional[float] = None) -> bool:
+    def is_enabled(
+        self,
+        *,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
+    ) -> bool:
         """Locator.is_enabled
 
         Returns whether the element is [enabled](https://playwright.dev/python/docs/actionability#enabled).
@@ -18557,10 +18737,14 @@ class Locator(SyncBase):
         """
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.is_enabled(timeout=timeout))
+            self._sync(self._impl_obj.is_enabled(timeout=to_milliseconds(timeout)))
         )
 
-    def is_hidden(self, *, timeout: typing.Optional[float] = None) -> bool:
+    def is_hidden(
+        self,
+        *,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
+    ) -> bool:
         """Locator.is_hidden
 
         Returns whether the element is hidden, the opposite of [visible](https://playwright.dev/python/docs/actionability#visible).
@@ -18585,10 +18769,14 @@ class Locator(SyncBase):
         """
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.is_hidden(timeout=timeout))
+            self._sync(self._impl_obj.is_hidden(timeout=to_milliseconds(timeout)))
         )
 
-    def is_visible(self, *, timeout: typing.Optional[float] = None) -> bool:
+    def is_visible(
+        self,
+        *,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
+    ) -> bool:
         """Locator.is_visible
 
         Returns whether the element is [visible](https://playwright.dev/python/docs/actionability#visible).
@@ -18613,7 +18801,7 @@ class Locator(SyncBase):
         """
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.is_visible(timeout=timeout))
+            self._sync(self._impl_obj.is_visible(timeout=to_milliseconds(timeout)))
         )
 
     def press(
@@ -18621,7 +18809,7 @@ class Locator(SyncBase):
         key: str,
         *,
         delay: typing.Optional[float] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         no_wait_after: typing.Optional[bool] = None,
     ) -> None:
         """Locator.press
@@ -18677,7 +18865,10 @@ class Locator(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.press(
-                    key=key, delay=delay, timeout=timeout, noWaitAfter=no_wait_after
+                    key=key,
+                    delay=delay,
+                    timeout=to_milliseconds(timeout),
+                    noWaitAfter=no_wait_after,
                 )
             )
         )
@@ -18685,7 +18876,7 @@ class Locator(SyncBase):
     def screenshot(
         self,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         type: typing.Optional[Literal["jpeg", "png"]] = None,
         path: typing.Optional[typing.Union[pathlib.Path, str]] = None,
         quality: typing.Optional[int] = None,
@@ -18777,7 +18968,7 @@ class Locator(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.screenshot(
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     type=type,
                     path=path,
                     quality=quality,
@@ -18795,7 +18986,7 @@ class Locator(SyncBase):
     def aria_snapshot(
         self,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         depth: typing.Optional[int] = None,
         mode: typing.Optional[Literal["ai", "default"]] = None,
     ) -> str:
@@ -18860,7 +19051,9 @@ class Locator(SyncBase):
 
         return mapping.from_maybe_impl(
             self._sync(
-                self._impl_obj.aria_snapshot(timeout=timeout, depth=depth, mode=mode)
+                self._impl_obj.aria_snapshot(
+                    timeout=to_milliseconds(timeout), depth=depth, mode=mode
+                )
             )
         )
 
@@ -18879,7 +19072,9 @@ class Locator(SyncBase):
         return mapping.from_impl(self._sync(self._impl_obj.normalize()))
 
     def scroll_into_view_if_needed(
-        self, *, timeout: typing.Optional[float] = None
+        self,
+        *,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """Locator.scroll_into_view_if_needed
 
@@ -18897,7 +19092,11 @@ class Locator(SyncBase):
         """
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.scroll_into_view_if_needed(timeout=timeout))
+            self._sync(
+                self._impl_obj.scroll_into_view_if_needed(
+                    timeout=to_milliseconds(timeout)
+                )
+            )
         )
 
     def select_option(
@@ -18909,7 +19108,7 @@ class Locator(SyncBase):
         element: typing.Optional[
             typing.Union["ElementHandle", typing.Sequence["ElementHandle"]]
         ] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         no_wait_after: typing.Optional[bool] = None,
         force: typing.Optional[bool] = None,
     ) -> typing.List[str]:
@@ -18983,7 +19182,7 @@ class Locator(SyncBase):
                     index=mapping.to_impl(index),
                     label=mapping.to_impl(label),
                     element=mapping.to_impl(element),
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     noWaitAfter=no_wait_after,
                     force=force,
                 )
@@ -18994,7 +19193,7 @@ class Locator(SyncBase):
         self,
         *,
         force: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """Locator.select_text
 
@@ -19015,7 +19214,11 @@ class Locator(SyncBase):
         """
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.select_text(force=force, timeout=timeout))
+            self._sync(
+                self._impl_obj.select_text(
+                    force=force, timeout=to_milliseconds(timeout)
+                )
+            )
         )
 
     def set_input_files(
@@ -19028,7 +19231,7 @@ class Locator(SyncBase):
             typing.Sequence[FilePayload],
         ],
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         no_wait_after: typing.Optional[bool] = None,
     ) -> None:
         """Locator.set_input_files
@@ -19084,7 +19287,7 @@ class Locator(SyncBase):
             self._sync(
                 self._impl_obj.set_input_files(
                     files=mapping.to_impl(files),
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     noWaitAfter=no_wait_after,
                 )
             )
@@ -19097,7 +19300,7 @@ class Locator(SyncBase):
             typing.Sequence[Literal["Alt", "Control", "ControlOrMeta", "Meta", "Shift"]]
         ] = None,
         position: typing.Optional[Position] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         force: typing.Optional[bool] = None,
         no_wait_after: typing.Optional[bool] = None,
         trial: typing.Optional[bool] = None,
@@ -19150,7 +19353,7 @@ class Locator(SyncBase):
                 self._impl_obj.tap(
                     modifiers=mapping.to_impl(modifiers),
                     position=position,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     force=force,
                     noWaitAfter=no_wait_after,
                     trial=trial,
@@ -19159,7 +19362,9 @@ class Locator(SyncBase):
         )
 
     def text_content(
-        self, *, timeout: typing.Optional[float] = None
+        self,
+        *,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> typing.Optional[str]:
         """Locator.text_content
 
@@ -19180,7 +19385,7 @@ class Locator(SyncBase):
         """
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.text_content(timeout=timeout))
+            self._sync(self._impl_obj.text_content(timeout=to_milliseconds(timeout)))
         )
 
     def type(
@@ -19188,7 +19393,7 @@ class Locator(SyncBase):
         text: str,
         *,
         delay: typing.Optional[float] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         no_wait_after: typing.Optional[bool] = None,
     ) -> None:
         """Locator.type
@@ -19217,7 +19422,10 @@ class Locator(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.type(
-                    text=text, delay=delay, timeout=timeout, noWaitAfter=no_wait_after
+                    text=text,
+                    delay=delay,
+                    timeout=to_milliseconds(timeout),
+                    noWaitAfter=no_wait_after,
                 )
             )
         )
@@ -19227,7 +19435,7 @@ class Locator(SyncBase):
         text: str,
         *,
         delay: typing.Optional[float] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         no_wait_after: typing.Optional[bool] = None,
     ) -> None:
         """Locator.press_sequentially
@@ -19272,7 +19480,10 @@ class Locator(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.press_sequentially(
-                    text=text, delay=delay, timeout=timeout, noWaitAfter=no_wait_after
+                    text=text,
+                    delay=delay,
+                    timeout=to_milliseconds(timeout),
+                    noWaitAfter=no_wait_after,
                 )
             )
         )
@@ -19281,7 +19492,7 @@ class Locator(SyncBase):
         self,
         *,
         position: typing.Optional[Position] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         force: typing.Optional[bool] = None,
         no_wait_after: typing.Optional[bool] = None,
         trial: typing.Optional[bool] = None,
@@ -19333,7 +19544,7 @@ class Locator(SyncBase):
             self._sync(
                 self._impl_obj.uncheck(
                     position=position,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     force=force,
                     noWaitAfter=no_wait_after,
                     trial=trial,
@@ -19386,7 +19597,7 @@ class Locator(SyncBase):
     def wait_for(
         self,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         state: typing.Optional[
             Literal["attached", "detached", "hidden", "visible"]
         ] = None,
@@ -19421,7 +19632,9 @@ class Locator(SyncBase):
         """
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.wait_for(timeout=timeout, state=state))
+            self._sync(
+                self._impl_obj.wait_for(timeout=to_milliseconds(timeout), state=state)
+            )
         )
 
     def set_checked(
@@ -19429,7 +19642,7 @@ class Locator(SyncBase):
         checked: bool,
         *,
         position: typing.Optional[Position] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         force: typing.Optional[bool] = None,
         no_wait_after: typing.Optional[bool] = None,
         trial: typing.Optional[bool] = None,
@@ -19483,7 +19696,7 @@ class Locator(SyncBase):
                 self._impl_obj.set_checked(
                     checked=checked,
                     position=position,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     force=force,
                     noWaitAfter=no_wait_after,
                     trial=trial,
@@ -19661,7 +19874,7 @@ class APIRequestContext(SyncBase):
         multipart: typing.Optional[
             typing.Dict[str, typing.Union[bytes, bool, float, str, FilePayload]]
         ] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         fail_on_status_code: typing.Optional[bool] = None,
         ignore_https_errors: typing.Optional[bool] = None,
         max_redirects: typing.Optional[int] = None,
@@ -19722,7 +19935,7 @@ class APIRequestContext(SyncBase):
                     data=mapping.to_impl(data),
                     form=mapping.to_impl(form),
                     multipart=mapping.to_impl(multipart),
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     failOnStatusCode=fail_on_status_code,
                     ignoreHTTPSErrors=ignore_https_errors,
                     maxRedirects=max_redirects,
@@ -19744,7 +19957,7 @@ class APIRequestContext(SyncBase):
         multipart: typing.Optional[
             typing.Dict[str, typing.Union[bytes, bool, float, str, FilePayload]]
         ] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         fail_on_status_code: typing.Optional[bool] = None,
         ignore_https_errors: typing.Optional[bool] = None,
         max_redirects: typing.Optional[int] = None,
@@ -19805,7 +20018,7 @@ class APIRequestContext(SyncBase):
                     data=mapping.to_impl(data),
                     form=mapping.to_impl(form),
                     multipart=mapping.to_impl(multipart),
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     failOnStatusCode=fail_on_status_code,
                     ignoreHTTPSErrors=ignore_https_errors,
                     maxRedirects=max_redirects,
@@ -19827,7 +20040,7 @@ class APIRequestContext(SyncBase):
         multipart: typing.Optional[
             typing.Dict[str, typing.Union[bytes, bool, float, str, FilePayload]]
         ] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         fail_on_status_code: typing.Optional[bool] = None,
         ignore_https_errors: typing.Optional[bool] = None,
         max_redirects: typing.Optional[int] = None,
@@ -19900,7 +20113,7 @@ class APIRequestContext(SyncBase):
                     data=mapping.to_impl(data),
                     form=mapping.to_impl(form),
                     multipart=mapping.to_impl(multipart),
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     failOnStatusCode=fail_on_status_code,
                     ignoreHTTPSErrors=ignore_https_errors,
                     maxRedirects=max_redirects,
@@ -19922,7 +20135,7 @@ class APIRequestContext(SyncBase):
         multipart: typing.Optional[
             typing.Dict[str, typing.Union[bytes, bool, float, str, FilePayload]]
         ] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         fail_on_status_code: typing.Optional[bool] = None,
         ignore_https_errors: typing.Optional[bool] = None,
         max_redirects: typing.Optional[int] = None,
@@ -19983,7 +20196,7 @@ class APIRequestContext(SyncBase):
                     data=mapping.to_impl(data),
                     form=mapping.to_impl(form),
                     multipart=mapping.to_impl(multipart),
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     failOnStatusCode=fail_on_status_code,
                     ignoreHTTPSErrors=ignore_https_errors,
                     maxRedirects=max_redirects,
@@ -20005,7 +20218,7 @@ class APIRequestContext(SyncBase):
         multipart: typing.Optional[
             typing.Dict[str, typing.Union[bytes, bool, float, str, FilePayload]]
         ] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         fail_on_status_code: typing.Optional[bool] = None,
         ignore_https_errors: typing.Optional[bool] = None,
         max_redirects: typing.Optional[int] = None,
@@ -20066,7 +20279,7 @@ class APIRequestContext(SyncBase):
                     data=mapping.to_impl(data),
                     form=mapping.to_impl(form),
                     multipart=mapping.to_impl(multipart),
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     failOnStatusCode=fail_on_status_code,
                     ignoreHTTPSErrors=ignore_https_errors,
                     maxRedirects=max_redirects,
@@ -20088,7 +20301,7 @@ class APIRequestContext(SyncBase):
         multipart: typing.Optional[
             typing.Dict[str, typing.Union[bytes, bool, float, str, FilePayload]]
         ] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         fail_on_status_code: typing.Optional[bool] = None,
         ignore_https_errors: typing.Optional[bool] = None,
         max_redirects: typing.Optional[int] = None,
@@ -20180,7 +20393,7 @@ class APIRequestContext(SyncBase):
                     data=mapping.to_impl(data),
                     form=mapping.to_impl(form),
                     multipart=mapping.to_impl(multipart),
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     failOnStatusCode=fail_on_status_code,
                     ignoreHTTPSErrors=ignore_https_errors,
                     maxRedirects=max_redirects,
@@ -20203,7 +20416,7 @@ class APIRequestContext(SyncBase):
         multipart: typing.Optional[
             typing.Dict[str, typing.Union[bytes, bool, float, str, FilePayload]]
         ] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         fail_on_status_code: typing.Optional[bool] = None,
         ignore_https_errors: typing.Optional[bool] = None,
         max_redirects: typing.Optional[int] = None,
@@ -20286,7 +20499,7 @@ class APIRequestContext(SyncBase):
                     data=mapping.to_impl(data),
                     form=mapping.to_impl(form),
                     multipart=mapping.to_impl(multipart),
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     failOnStatusCode=fail_on_status_code,
                     ignoreHTTPSErrors=ignore_https_errors,
                     maxRedirects=max_redirects,
@@ -20338,7 +20551,7 @@ class APIRequest(SyncBase):
         ignore_https_errors: typing.Optional[bool] = None,
         proxy: typing.Optional[ProxySettings] = None,
         user_agent: typing.Optional[str] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         storage_state: typing.Optional[
             typing.Union[StorageState, str, pathlib.Path]
         ] = None,
@@ -20419,7 +20632,7 @@ class APIRequest(SyncBase):
                     ignoreHTTPSErrors=ignore_https_errors,
                     proxy=proxy,
                     userAgent=user_agent,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     storageState=storage_state,
                     clientCertificates=client_certificates,
                     failOnStatusCode=fail_on_status_code,
@@ -20438,7 +20651,7 @@ class PageAssertions(SyncBase):
         self,
         title_or_reg_exp: typing.Union[typing.Pattern[str], str],
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """PageAssertions.to_have_title
 
@@ -20466,7 +20679,7 @@ class PageAssertions(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.to_have_title(
-                    titleOrRegExp=title_or_reg_exp, timeout=timeout
+                    titleOrRegExp=title_or_reg_exp, timeout=to_milliseconds(timeout)
                 )
             )
         )
@@ -20475,7 +20688,7 @@ class PageAssertions(SyncBase):
         self,
         title_or_reg_exp: typing.Union[typing.Pattern[str], str],
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """PageAssertions.not_to_have_title
 
@@ -20493,7 +20706,7 @@ class PageAssertions(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.not_to_have_title(
-                    titleOrRegExp=title_or_reg_exp, timeout=timeout
+                    titleOrRegExp=title_or_reg_exp, timeout=to_milliseconds(timeout)
                 )
             )
         )
@@ -20502,7 +20715,7 @@ class PageAssertions(SyncBase):
         self,
         url_or_reg_exp: typing.Union[str, typing.Pattern[str]],
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         ignore_case: typing.Optional[bool] = None,
     ) -> None:
         """PageAssertions.to_have_url
@@ -20534,7 +20747,9 @@ class PageAssertions(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.to_have_url(
-                    urlOrRegExp=url_or_reg_exp, timeout=timeout, ignoreCase=ignore_case
+                    urlOrRegExp=url_or_reg_exp,
+                    timeout=to_milliseconds(timeout),
+                    ignoreCase=ignore_case,
                 )
             )
         )
@@ -20543,7 +20758,7 @@ class PageAssertions(SyncBase):
         self,
         url_or_reg_exp: typing.Union[typing.Pattern[str], str],
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         ignore_case: typing.Optional[bool] = None,
     ) -> None:
         """PageAssertions.not_to_have_url
@@ -20565,7 +20780,9 @@ class PageAssertions(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.not_to_have_url(
-                    urlOrRegExp=url_or_reg_exp, timeout=timeout, ignoreCase=ignore_case
+                    urlOrRegExp=url_or_reg_exp,
+                    timeout=to_milliseconds(timeout),
+                    ignoreCase=ignore_case,
                 )
             )
         )
@@ -20587,7 +20804,7 @@ class LocatorAssertions(SyncBase):
         ],
         *,
         use_inner_text: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         ignore_case: typing.Optional[bool] = None,
     ) -> None:
         """LocatorAssertions.to_contain_text
@@ -20664,7 +20881,7 @@ class LocatorAssertions(SyncBase):
                 self._impl_obj.to_contain_text(
                     expected=mapping.to_impl(expected),
                     useInnerText=use_inner_text,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     ignoreCase=ignore_case,
                 )
             )
@@ -20681,7 +20898,7 @@ class LocatorAssertions(SyncBase):
         ],
         *,
         use_inner_text: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         ignore_case: typing.Optional[bool] = None,
     ) -> None:
         """LocatorAssertions.not_to_contain_text
@@ -20707,7 +20924,7 @@ class LocatorAssertions(SyncBase):
                 self._impl_obj.not_to_contain_text(
                     expected=mapping.to_impl(expected),
                     useInnerText=use_inner_text,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     ignoreCase=ignore_case,
                 )
             )
@@ -20719,7 +20936,7 @@ class LocatorAssertions(SyncBase):
         value: typing.Union[str, typing.Pattern[str]],
         *,
         ignore_case: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """LocatorAssertions.to_have_attribute
 
@@ -20751,7 +20968,10 @@ class LocatorAssertions(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.to_have_attribute(
-                    name=name, value=value, ignoreCase=ignore_case, timeout=timeout
+                    name=name,
+                    value=value,
+                    ignoreCase=ignore_case,
+                    timeout=to_milliseconds(timeout),
                 )
             )
         )
@@ -20762,7 +20982,7 @@ class LocatorAssertions(SyncBase):
         value: typing.Union[str, typing.Pattern[str]],
         *,
         ignore_case: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """LocatorAssertions.not_to_have_attribute
 
@@ -20785,7 +21005,10 @@ class LocatorAssertions(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.not_to_have_attribute(
-                    name=name, value=value, ignoreCase=ignore_case, timeout=timeout
+                    name=name,
+                    value=value,
+                    ignoreCase=ignore_case,
+                    timeout=to_milliseconds(timeout),
                 )
             )
         )
@@ -20800,7 +21023,7 @@ class LocatorAssertions(SyncBase):
             str,
         ],
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """LocatorAssertions.to_have_class
 
@@ -20844,7 +21067,7 @@ class LocatorAssertions(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.to_have_class(
-                    expected=mapping.to_impl(expected), timeout=timeout
+                    expected=mapping.to_impl(expected), timeout=to_milliseconds(timeout)
                 )
             )
         )
@@ -20859,7 +21082,7 @@ class LocatorAssertions(SyncBase):
             str,
         ],
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """LocatorAssertions.not_to_have_class
 
@@ -20877,7 +21100,7 @@ class LocatorAssertions(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.not_to_have_class(
-                    expected=mapping.to_impl(expected), timeout=timeout
+                    expected=mapping.to_impl(expected), timeout=to_milliseconds(timeout)
                 )
             )
         )
@@ -20886,7 +21109,7 @@ class LocatorAssertions(SyncBase):
         self,
         expected: typing.Union[typing.Sequence[str], str],
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """LocatorAssertions.to_contain_class
 
@@ -20940,7 +21163,7 @@ class LocatorAssertions(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.to_contain_class(
-                    expected=mapping.to_impl(expected), timeout=timeout
+                    expected=mapping.to_impl(expected), timeout=to_milliseconds(timeout)
                 )
             )
         )
@@ -20949,7 +21172,7 @@ class LocatorAssertions(SyncBase):
         self,
         expected: typing.Union[typing.Sequence[str], str],
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """LocatorAssertions.not_to_contain_class
 
@@ -20967,13 +21190,16 @@ class LocatorAssertions(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.not_to_contain_class(
-                    expected=mapping.to_impl(expected), timeout=timeout
+                    expected=mapping.to_impl(expected), timeout=to_milliseconds(timeout)
                 )
             )
         )
 
     def to_have_count(
-        self, count: int, *, timeout: typing.Optional[float] = None
+        self,
+        count: int,
+        *,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """LocatorAssertions.to_have_count
 
@@ -20998,11 +21224,18 @@ class LocatorAssertions(SyncBase):
         __tracebackhide__ = True
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.to_have_count(count=count, timeout=timeout))
+            self._sync(
+                self._impl_obj.to_have_count(
+                    count=count, timeout=to_milliseconds(timeout)
+                )
+            )
         )
 
     def not_to_have_count(
-        self, count: int, *, timeout: typing.Optional[float] = None
+        self,
+        count: int,
+        *,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """LocatorAssertions.not_to_have_count
 
@@ -21018,7 +21251,11 @@ class LocatorAssertions(SyncBase):
         __tracebackhide__ = True
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.not_to_have_count(count=count, timeout=timeout))
+            self._sync(
+                self._impl_obj.not_to_have_count(
+                    count=count, timeout=to_milliseconds(timeout)
+                )
+            )
         )
 
     def to_have_css(
@@ -21026,7 +21263,7 @@ class LocatorAssertions(SyncBase):
         name: str,
         value: typing.Union[str, typing.Pattern[str]],
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """LocatorAssertions.to_have_css
 
@@ -21054,7 +21291,9 @@ class LocatorAssertions(SyncBase):
 
         return mapping.from_maybe_impl(
             self._sync(
-                self._impl_obj.to_have_css(name=name, value=value, timeout=timeout)
+                self._impl_obj.to_have_css(
+                    name=name, value=value, timeout=to_milliseconds(timeout)
+                )
             )
         )
 
@@ -21063,7 +21302,7 @@ class LocatorAssertions(SyncBase):
         name: str,
         value: typing.Union[str, typing.Pattern[str]],
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """LocatorAssertions.not_to_have_css
 
@@ -21082,7 +21321,9 @@ class LocatorAssertions(SyncBase):
 
         return mapping.from_maybe_impl(
             self._sync(
-                self._impl_obj.not_to_have_css(name=name, value=value, timeout=timeout)
+                self._impl_obj.not_to_have_css(
+                    name=name, value=value, timeout=to_milliseconds(timeout)
+                )
             )
         )
 
@@ -21090,7 +21331,7 @@ class LocatorAssertions(SyncBase):
         self,
         id: typing.Union[str, typing.Pattern[str]],
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """LocatorAssertions.to_have_id
 
@@ -21115,14 +21356,16 @@ class LocatorAssertions(SyncBase):
         __tracebackhide__ = True
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.to_have_id(id=id, timeout=timeout))
+            self._sync(
+                self._impl_obj.to_have_id(id=id, timeout=to_milliseconds(timeout))
+            )
         )
 
     def not_to_have_id(
         self,
         id: typing.Union[str, typing.Pattern[str]],
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """LocatorAssertions.not_to_have_id
 
@@ -21138,11 +21381,17 @@ class LocatorAssertions(SyncBase):
         __tracebackhide__ = True
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.not_to_have_id(id=id, timeout=timeout))
+            self._sync(
+                self._impl_obj.not_to_have_id(id=id, timeout=to_milliseconds(timeout))
+            )
         )
 
     def to_have_js_property(
-        self, name: str, value: typing.Any, *, timeout: typing.Optional[float] = None
+        self,
+        name: str,
+        value: typing.Any,
+        *,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """LocatorAssertions.to_have_js_property
 
@@ -21172,13 +21421,19 @@ class LocatorAssertions(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.to_have_js_property(
-                    name=name, value=mapping.to_impl(value), timeout=timeout
+                    name=name,
+                    value=mapping.to_impl(value),
+                    timeout=to_milliseconds(timeout),
                 )
             )
         )
 
     def not_to_have_js_property(
-        self, name: str, value: typing.Any, *, timeout: typing.Optional[float] = None
+        self,
+        name: str,
+        value: typing.Any,
+        *,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """LocatorAssertions.not_to_have_js_property
 
@@ -21198,7 +21453,9 @@ class LocatorAssertions(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.not_to_have_js_property(
-                    name=name, value=mapping.to_impl(value), timeout=timeout
+                    name=name,
+                    value=mapping.to_impl(value),
+                    timeout=to_milliseconds(timeout),
                 )
             )
         )
@@ -21207,7 +21464,7 @@ class LocatorAssertions(SyncBase):
         self,
         value: typing.Union[str, typing.Pattern[str]],
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """LocatorAssertions.to_have_value
 
@@ -21234,14 +21491,18 @@ class LocatorAssertions(SyncBase):
         __tracebackhide__ = True
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.to_have_value(value=value, timeout=timeout))
+            self._sync(
+                self._impl_obj.to_have_value(
+                    value=value, timeout=to_milliseconds(timeout)
+                )
+            )
         )
 
     def not_to_have_value(
         self,
         value: typing.Union[str, typing.Pattern[str]],
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """LocatorAssertions.not_to_have_value
 
@@ -21257,7 +21518,11 @@ class LocatorAssertions(SyncBase):
         __tracebackhide__ = True
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.not_to_have_value(value=value, timeout=timeout))
+            self._sync(
+                self._impl_obj.not_to_have_value(
+                    value=value, timeout=to_milliseconds(timeout)
+                )
+            )
         )
 
     def to_have_values(
@@ -21268,7 +21533,7 @@ class LocatorAssertions(SyncBase):
             typing.Sequence[typing.Union[typing.Pattern[str], str]],
         ],
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """LocatorAssertions.to_have_values
 
@@ -21308,7 +21573,7 @@ class LocatorAssertions(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.to_have_values(
-                    values=mapping.to_impl(values), timeout=timeout
+                    values=mapping.to_impl(values), timeout=to_milliseconds(timeout)
                 )
             )
         )
@@ -21321,7 +21586,7 @@ class LocatorAssertions(SyncBase):
             typing.Sequence[typing.Union[typing.Pattern[str], str]],
         ],
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """LocatorAssertions.not_to_have_values
 
@@ -21339,7 +21604,7 @@ class LocatorAssertions(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.not_to_have_values(
-                    values=mapping.to_impl(values), timeout=timeout
+                    values=mapping.to_impl(values), timeout=to_milliseconds(timeout)
                 )
             )
         )
@@ -21355,7 +21620,7 @@ class LocatorAssertions(SyncBase):
         ],
         *,
         use_inner_text: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         ignore_case: typing.Optional[bool] = None,
     ) -> None:
         """LocatorAssertions.to_have_text
@@ -21431,7 +21696,7 @@ class LocatorAssertions(SyncBase):
                 self._impl_obj.to_have_text(
                     expected=mapping.to_impl(expected),
                     useInnerText=use_inner_text,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     ignoreCase=ignore_case,
                 )
             )
@@ -21448,7 +21713,7 @@ class LocatorAssertions(SyncBase):
         ],
         *,
         use_inner_text: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         ignore_case: typing.Optional[bool] = None,
     ) -> None:
         """LocatorAssertions.not_to_have_text
@@ -21474,7 +21739,7 @@ class LocatorAssertions(SyncBase):
                 self._impl_obj.not_to_have_text(
                     expected=mapping.to_impl(expected),
                     useInnerText=use_inner_text,
-                    timeout=timeout,
+                    timeout=to_milliseconds(timeout),
                     ignoreCase=ignore_case,
                 )
             )
@@ -21484,7 +21749,7 @@ class LocatorAssertions(SyncBase):
         self,
         *,
         attached: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """LocatorAssertions.to_be_attached
 
@@ -21507,14 +21772,16 @@ class LocatorAssertions(SyncBase):
 
         return mapping.from_maybe_impl(
             self._sync(
-                self._impl_obj.to_be_attached(attached=attached, timeout=timeout)
+                self._impl_obj.to_be_attached(
+                    attached=attached, timeout=to_milliseconds(timeout)
+                )
             )
         )
 
     def to_be_checked(
         self,
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
         checked: typing.Optional[bool] = None,
         indeterminate: typing.Optional[bool] = None,
     ) -> None:
@@ -21547,7 +21814,9 @@ class LocatorAssertions(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.to_be_checked(
-                    timeout=timeout, checked=checked, indeterminate=indeterminate
+                    timeout=to_milliseconds(timeout),
+                    checked=checked,
+                    indeterminate=indeterminate,
                 )
             )
         )
@@ -21556,7 +21825,7 @@ class LocatorAssertions(SyncBase):
         self,
         *,
         attached: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """LocatorAssertions.not_to_be_attached
 
@@ -21572,11 +21841,17 @@ class LocatorAssertions(SyncBase):
 
         return mapping.from_maybe_impl(
             self._sync(
-                self._impl_obj.not_to_be_attached(attached=attached, timeout=timeout)
+                self._impl_obj.not_to_be_attached(
+                    attached=attached, timeout=to_milliseconds(timeout)
+                )
             )
         )
 
-    def not_to_be_checked(self, *, timeout: typing.Optional[float] = None) -> None:
+    def not_to_be_checked(
+        self,
+        *,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
+    ) -> None:
         """LocatorAssertions.not_to_be_checked
 
         The opposite of `locator_assertions.to_be_checked()`.
@@ -21589,10 +21864,16 @@ class LocatorAssertions(SyncBase):
         __tracebackhide__ = True
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.not_to_be_checked(timeout=timeout))
+            self._sync(
+                self._impl_obj.not_to_be_checked(timeout=to_milliseconds(timeout))
+            )
         )
 
-    def to_be_disabled(self, *, timeout: typing.Optional[float] = None) -> None:
+    def to_be_disabled(
+        self,
+        *,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
+    ) -> None:
         """LocatorAssertions.to_be_disabled
 
         Ensures the `Locator` points to a disabled element. Element is disabled if it has \"disabled\" attribute or is
@@ -21618,10 +21899,14 @@ class LocatorAssertions(SyncBase):
         __tracebackhide__ = True
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.to_be_disabled(timeout=timeout))
+            self._sync(self._impl_obj.to_be_disabled(timeout=to_milliseconds(timeout)))
         )
 
-    def not_to_be_disabled(self, *, timeout: typing.Optional[float] = None) -> None:
+    def not_to_be_disabled(
+        self,
+        *,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
+    ) -> None:
         """LocatorAssertions.not_to_be_disabled
 
         The opposite of `locator_assertions.to_be_disabled()`.
@@ -21634,14 +21919,16 @@ class LocatorAssertions(SyncBase):
         __tracebackhide__ = True
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.not_to_be_disabled(timeout=timeout))
+            self._sync(
+                self._impl_obj.not_to_be_disabled(timeout=to_milliseconds(timeout))
+            )
         )
 
     def to_be_editable(
         self,
         *,
         editable: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """LocatorAssertions.to_be_editable
 
@@ -21666,7 +21953,9 @@ class LocatorAssertions(SyncBase):
 
         return mapping.from_maybe_impl(
             self._sync(
-                self._impl_obj.to_be_editable(editable=editable, timeout=timeout)
+                self._impl_obj.to_be_editable(
+                    editable=editable, timeout=to_milliseconds(timeout)
+                )
             )
         )
 
@@ -21674,7 +21963,7 @@ class LocatorAssertions(SyncBase):
         self,
         *,
         editable: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """LocatorAssertions.not_to_be_editable
 
@@ -21690,11 +21979,17 @@ class LocatorAssertions(SyncBase):
 
         return mapping.from_maybe_impl(
             self._sync(
-                self._impl_obj.not_to_be_editable(editable=editable, timeout=timeout)
+                self._impl_obj.not_to_be_editable(
+                    editable=editable, timeout=to_milliseconds(timeout)
+                )
             )
         )
 
-    def to_be_empty(self, *, timeout: typing.Optional[float] = None) -> None:
+    def to_be_empty(
+        self,
+        *,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
+    ) -> None:
         """LocatorAssertions.to_be_empty
 
         Ensures the `Locator` points to an empty editable element or to a DOM node that has no text.
@@ -21716,10 +22011,14 @@ class LocatorAssertions(SyncBase):
         __tracebackhide__ = True
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.to_be_empty(timeout=timeout))
+            self._sync(self._impl_obj.to_be_empty(timeout=to_milliseconds(timeout)))
         )
 
-    def not_to_be_empty(self, *, timeout: typing.Optional[float] = None) -> None:
+    def not_to_be_empty(
+        self,
+        *,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
+    ) -> None:
         """LocatorAssertions.not_to_be_empty
 
         The opposite of `locator_assertions.to_be_empty()`.
@@ -21732,14 +22031,14 @@ class LocatorAssertions(SyncBase):
         __tracebackhide__ = True
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.not_to_be_empty(timeout=timeout))
+            self._sync(self._impl_obj.not_to_be_empty(timeout=to_milliseconds(timeout)))
         )
 
     def to_be_enabled(
         self,
         *,
         enabled: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """LocatorAssertions.to_be_enabled
 
@@ -21763,14 +22062,18 @@ class LocatorAssertions(SyncBase):
         __tracebackhide__ = True
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.to_be_enabled(enabled=enabled, timeout=timeout))
+            self._sync(
+                self._impl_obj.to_be_enabled(
+                    enabled=enabled, timeout=to_milliseconds(timeout)
+                )
+            )
         )
 
     def not_to_be_enabled(
         self,
         *,
         enabled: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """LocatorAssertions.not_to_be_enabled
 
@@ -21786,11 +22089,17 @@ class LocatorAssertions(SyncBase):
 
         return mapping.from_maybe_impl(
             self._sync(
-                self._impl_obj.not_to_be_enabled(enabled=enabled, timeout=timeout)
+                self._impl_obj.not_to_be_enabled(
+                    enabled=enabled, timeout=to_milliseconds(timeout)
+                )
             )
         )
 
-    def to_be_hidden(self, *, timeout: typing.Optional[float] = None) -> None:
+    def to_be_hidden(
+        self,
+        *,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
+    ) -> None:
         """LocatorAssertions.to_be_hidden
 
         Ensures that `Locator` either does not resolve to any DOM node, or resolves to a
@@ -21813,10 +22122,14 @@ class LocatorAssertions(SyncBase):
         __tracebackhide__ = True
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.to_be_hidden(timeout=timeout))
+            self._sync(self._impl_obj.to_be_hidden(timeout=to_milliseconds(timeout)))
         )
 
-    def not_to_be_hidden(self, *, timeout: typing.Optional[float] = None) -> None:
+    def not_to_be_hidden(
+        self,
+        *,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
+    ) -> None:
         """LocatorAssertions.not_to_be_hidden
 
         The opposite of `locator_assertions.to_be_hidden()`.
@@ -21829,14 +22142,16 @@ class LocatorAssertions(SyncBase):
         __tracebackhide__ = True
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.not_to_be_hidden(timeout=timeout))
+            self._sync(
+                self._impl_obj.not_to_be_hidden(timeout=to_milliseconds(timeout))
+            )
         )
 
     def to_be_visible(
         self,
         *,
         visible: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """LocatorAssertions.to_be_visible
 
@@ -21870,14 +22185,18 @@ class LocatorAssertions(SyncBase):
         __tracebackhide__ = True
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.to_be_visible(visible=visible, timeout=timeout))
+            self._sync(
+                self._impl_obj.to_be_visible(
+                    visible=visible, timeout=to_milliseconds(timeout)
+                )
+            )
         )
 
     def not_to_be_visible(
         self,
         *,
         visible: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """LocatorAssertions.not_to_be_visible
 
@@ -21893,11 +22212,17 @@ class LocatorAssertions(SyncBase):
 
         return mapping.from_maybe_impl(
             self._sync(
-                self._impl_obj.not_to_be_visible(visible=visible, timeout=timeout)
+                self._impl_obj.not_to_be_visible(
+                    visible=visible, timeout=to_milliseconds(timeout)
+                )
             )
         )
 
-    def to_be_focused(self, *, timeout: typing.Optional[float] = None) -> None:
+    def to_be_focused(
+        self,
+        *,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
+    ) -> None:
         """LocatorAssertions.to_be_focused
 
         Ensures the `Locator` points to a focused DOM node.
@@ -21919,10 +22244,14 @@ class LocatorAssertions(SyncBase):
         __tracebackhide__ = True
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.to_be_focused(timeout=timeout))
+            self._sync(self._impl_obj.to_be_focused(timeout=to_milliseconds(timeout)))
         )
 
-    def not_to_be_focused(self, *, timeout: typing.Optional[float] = None) -> None:
+    def not_to_be_focused(
+        self,
+        *,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
+    ) -> None:
         """LocatorAssertions.not_to_be_focused
 
         The opposite of `locator_assertions.to_be_focused()`.
@@ -21935,14 +22264,16 @@ class LocatorAssertions(SyncBase):
         __tracebackhide__ = True
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.not_to_be_focused(timeout=timeout))
+            self._sync(
+                self._impl_obj.not_to_be_focused(timeout=to_milliseconds(timeout))
+            )
         )
 
     def to_be_in_viewport(
         self,
         *,
         ratio: typing.Optional[float] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """LocatorAssertions.to_be_in_viewport
 
@@ -21974,14 +22305,18 @@ class LocatorAssertions(SyncBase):
         __tracebackhide__ = True
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.to_be_in_viewport(ratio=ratio, timeout=timeout))
+            self._sync(
+                self._impl_obj.to_be_in_viewport(
+                    ratio=ratio, timeout=to_milliseconds(timeout)
+                )
+            )
         )
 
     def not_to_be_in_viewport(
         self,
         *,
         ratio: typing.Optional[float] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """LocatorAssertions.not_to_be_in_viewport
 
@@ -21997,7 +22332,9 @@ class LocatorAssertions(SyncBase):
 
         return mapping.from_maybe_impl(
             self._sync(
-                self._impl_obj.not_to_be_in_viewport(ratio=ratio, timeout=timeout)
+                self._impl_obj.not_to_be_in_viewport(
+                    ratio=ratio, timeout=to_milliseconds(timeout)
+                )
             )
         )
 
@@ -22006,7 +22343,7 @@ class LocatorAssertions(SyncBase):
         description: typing.Union[str, typing.Pattern[str]],
         *,
         ignore_case: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """LocatorAssertions.to_have_accessible_description
 
@@ -22035,7 +22372,9 @@ class LocatorAssertions(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.to_have_accessible_description(
-                    description=description, ignoreCase=ignore_case, timeout=timeout
+                    description=description,
+                    ignoreCase=ignore_case,
+                    timeout=to_milliseconds(timeout),
                 )
             )
         )
@@ -22045,7 +22384,7 @@ class LocatorAssertions(SyncBase):
         name: typing.Union[str, typing.Pattern[str]],
         *,
         ignore_case: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """LocatorAssertions.not_to_have_accessible_description
 
@@ -22066,7 +22405,7 @@ class LocatorAssertions(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.not_to_have_accessible_description(
-                    name=name, ignoreCase=ignore_case, timeout=timeout
+                    name=name, ignoreCase=ignore_case, timeout=to_milliseconds(timeout)
                 )
             )
         )
@@ -22076,7 +22415,7 @@ class LocatorAssertions(SyncBase):
         name: typing.Union[str, typing.Pattern[str]],
         *,
         ignore_case: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """LocatorAssertions.to_have_accessible_name
 
@@ -22105,7 +22444,7 @@ class LocatorAssertions(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.to_have_accessible_name(
-                    name=name, ignoreCase=ignore_case, timeout=timeout
+                    name=name, ignoreCase=ignore_case, timeout=to_milliseconds(timeout)
                 )
             )
         )
@@ -22115,7 +22454,7 @@ class LocatorAssertions(SyncBase):
         name: typing.Union[str, typing.Pattern[str]],
         *,
         ignore_case: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """LocatorAssertions.not_to_have_accessible_name
 
@@ -22136,7 +22475,7 @@ class LocatorAssertions(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.not_to_have_accessible_name(
-                    name=name, ignoreCase=ignore_case, timeout=timeout
+                    name=name, ignoreCase=ignore_case, timeout=to_milliseconds(timeout)
                 )
             )
         )
@@ -22228,7 +22567,7 @@ class LocatorAssertions(SyncBase):
             "treeitem",
         ],
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """LocatorAssertions.to_have_role
 
@@ -22254,7 +22593,9 @@ class LocatorAssertions(SyncBase):
         __tracebackhide__ = True
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.to_have_role(role=role, timeout=timeout))
+            self._sync(
+                self._impl_obj.to_have_role(role=role, timeout=to_milliseconds(timeout))
+            )
         )
 
     def to_have_accessible_error_message(
@@ -22262,7 +22603,7 @@ class LocatorAssertions(SyncBase):
         error_message: typing.Union[str, typing.Pattern[str]],
         *,
         ignore_case: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """LocatorAssertions.to_have_accessible_error_message
 
@@ -22291,7 +22632,9 @@ class LocatorAssertions(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.to_have_accessible_error_message(
-                    errorMessage=error_message, ignoreCase=ignore_case, timeout=timeout
+                    errorMessage=error_message,
+                    ignoreCase=ignore_case,
+                    timeout=to_milliseconds(timeout),
                 )
             )
         )
@@ -22301,7 +22644,7 @@ class LocatorAssertions(SyncBase):
         error_message: typing.Union[str, typing.Pattern[str]],
         *,
         ignore_case: typing.Optional[bool] = None,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """LocatorAssertions.not_to_have_accessible_error_message
 
@@ -22322,7 +22665,9 @@ class LocatorAssertions(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.not_to_have_accessible_error_message(
-                    errorMessage=error_message, ignoreCase=ignore_case, timeout=timeout
+                    errorMessage=error_message,
+                    ignoreCase=ignore_case,
+                    timeout=to_milliseconds(timeout),
                 )
             )
         )
@@ -22414,7 +22759,7 @@ class LocatorAssertions(SyncBase):
             "treeitem",
         ],
         *,
-        timeout: typing.Optional[float] = None,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """LocatorAssertions.not_to_have_role
 
@@ -22430,11 +22775,18 @@ class LocatorAssertions(SyncBase):
         __tracebackhide__ = True
 
         return mapping.from_maybe_impl(
-            self._sync(self._impl_obj.not_to_have_role(role=role, timeout=timeout))
+            self._sync(
+                self._impl_obj.not_to_have_role(
+                    role=role, timeout=to_milliseconds(timeout)
+                )
+            )
         )
 
     def to_match_aria_snapshot(
-        self, expected: str, *, timeout: typing.Optional[float] = None
+        self,
+        expected: str,
+        *,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """LocatorAssertions.to_match_aria_snapshot
 
@@ -22461,13 +22813,16 @@ class LocatorAssertions(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.to_match_aria_snapshot(
-                    expected=expected, timeout=timeout
+                    expected=expected, timeout=to_milliseconds(timeout)
                 )
             )
         )
 
     def not_to_match_aria_snapshot(
-        self, expected: str, *, timeout: typing.Optional[float] = None
+        self,
+        expected: str,
+        *,
+        timeout: typing.Optional[typing.Union[float, datetime.timedelta]] = None,
     ) -> None:
         """LocatorAssertions.not_to_match_aria_snapshot
 
@@ -22484,7 +22839,7 @@ class LocatorAssertions(SyncBase):
         return mapping.from_maybe_impl(
             self._sync(
                 self._impl_obj.not_to_match_aria_snapshot(
-                    expected=expected, timeout=timeout
+                    expected=expected, timeout=to_milliseconds(timeout)
                 )
             )
         )
